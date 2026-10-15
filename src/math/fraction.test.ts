@@ -84,3 +84,18 @@ describe('Fraction arithmetic', () => {
     expect(sum.toString()).toBe('3/10')
   })
 })
+
+describe('Fraction LaTeX', () => {
+  it('renders integers bare and other values as \\frac', () => {
+    expect(Fraction.parse('3').toLatex()).toBe('3')
+    expect(Fraction.parse('-7').toLatex()).toBe('-7')
+    expect(Fraction.parse('3/4').toLatex()).toBe('\\frac{3}{4}')
+    expect(Fraction.parse('6/8').toLatex()).toBe('\\frac{3}{4}')
+  })
+
+  it('keeps the sign in front of the fraction', () => {
+    expect(Fraction.parse('-3/4').toLatex()).toBe('-\\frac{3}{4}')
+    expect(Fraction.parse('-2').toLatex()).toBe('-2')
+    expect(Fraction.ZERO.toLatex()).toBe('0')
+  })
+})

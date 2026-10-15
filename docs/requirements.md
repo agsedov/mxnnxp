@@ -66,6 +66,7 @@ Concrete rules:
   Removing the connection restores the editable grid with the previous values.
 - While the input slot is connected but carries no value, the widget waits
   (calm state, no error) and produces no output.
+- Driven display is typeset with TeX (see R6): a bracketed matrix of fractions.
 - Invalid cell (while not driven) → cell highlighted red and widget error
   message; output value is withheld until all cells parse.
 
@@ -94,15 +95,47 @@ Concrete rules:
 - Errors do not cascade further than the widget itself: downstream widgets
   simply receive *no value* on that slot and wait.
 
+## R6 — TeX rendering (read-only values)
+
+- Values a widget did not produce itself (a matrix driven by its input) are
+  typeset with TeX instead of being drawn as plain DOM cells: a bracketed
+  `bmatrix` of exact fractions — `\frac{1}{2}`, bare integers, sign in front
+  (`-\frac{3}{4}`) — rendered by [KaTeX](https://katex.org).
+- LaTeX is produced by the math layer (`Fraction.toLatex`, `Matrix.toLatex`) and
+  is unit-tested there; `src/components/Tex.tsx` only turns that string into
+  HTML.
+- TeX is a **display** format only: it never parses or computes values, and the
+  plain `toString()` form stays authoritative (tests, errors, debug).
+- KaTeX is used because it is *synchronous* — `renderToString` returns finished
+  HTML with no queued typesetting pass, so there is no asynchronous render
+  cycle to keep in step with React state.
+
+### Development policy — the TeX update cycle
+
+If typeset values stop keeping up with the graph (stale formulas, flicker,
+remount storms, a matrix that no longer follows its input), the answer *during
+development* is to **temporarily stop updating** rather than to debug the
+renderer in the middle of another feature:
+
+- flip `FREEZE_TEX_UPDATES` in `src/components/Tex.tsx` to `true`, so every TeX
+  block keeps showing the first value it rendered and ignores later ones;
+- carry on with the feature at hand;
+- treat the update-cycle problem as its own follow-up task, fixed (or
+  re-designed) later, with the freeze reverted.
+
+Freezing is deliberately a one-line, revertible measure for development speed:
+values may look stale on screen while it is on, but the graph itself is
+unaffected.
+
 ---
 
 ## Architecture
 
 | Layer | Where | Notes |
 |---|---|---|
-| Math | `src/math/` | `Fraction`, `Matrix` — pure, immutable, unit-tested |
+| Math | `src/math/` | `Fraction`, `Matrix` — pure, immutable, unit-tested (incl. LaTeX) |
 | Graph | `src/graph/` | widget specs, connection rules, topological evaluation — pure, unit-tested |
-| UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`) |
+| UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`), TeX rendering (`Tex.tsx`) |
 
 React Flow provides only the interaction/geometry mechanics (dragging, slot
 hit-testing, wire rendering, pan/zoom). All domain logic — fractions, matrix

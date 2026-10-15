@@ -175,6 +175,19 @@ export class Fraction {
     return this.denominator === 1 ? String(this.numerator) : `${this.numerator}/${this.denominator}`
   }
 
+  /**
+   * LaTeX for this value: `3` for integers, `\frac{3}{4}` otherwise. The sign
+   * is written in front (`-\frac{1}{2}`) rather than inside the numerator, and
+   * the denominator is never negative (see the normalization invariants).
+   */
+  toLatex(): string {
+    if (this.denominator === 1) {
+      return String(this.numerator)
+    }
+    const sign = this.numerator < 0 ? '-' : ''
+    return `${sign}\\frac{${Math.abs(this.numerator)}}{${this.denominator}}`
+  }
+
   toNumber(): number {
     return this.numerator / this.denominator
   }

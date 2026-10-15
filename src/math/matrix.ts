@@ -84,6 +84,16 @@ export class Matrix {
   toString(): string {
     return this.data.map(row => `[${row.join(', ')}]`).join(' ')
   }
+
+  /**
+   * LaTeX for this matrix as a bracketed `bmatrix`, e.g.
+   * `\begin{bmatrix} 1 & \frac{1}{2} \\ 0 & 1 \end{bmatrix}`. Meant for a TeX
+   * renderer (KaTeX); the plain `toString()` stays the debug/UI-free form.
+   */
+  toLatex(): string {
+    const rows = this.data.map(row => row.map(entry => entry.toLatex()).join(' & '))
+    return `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`
+  }
 }
 
 function assertPositiveSize(value: number, label: string): void {

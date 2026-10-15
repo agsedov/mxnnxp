@@ -1,19 +1,11 @@
+import { Tex } from './Tex'
 import type { Matrix } from '../math/matrix'
 
 /**
- * Read-only grid of exact fractions, in `n/d` form. Used to show computed
- * values (a product, or a matrix taken over from an input slot).
+ * Read-only view of a matrix: exact fractions typeset with TeX (a bracketed
+ * matrix of `\frac`s). Used wherever a widget shows a value it did not produce
+ * itself, e.g. a matrix driven by its input slot.
  */
 export function MatrixView({ matrix }: { matrix: Matrix }) {
-  return (
-    <div className="result-grid" style={{ gridTemplateColumns: `repeat(${matrix.cols}, minmax(46px, auto))` }}>
-      {matrix.data.map((row, rowIndex) =>
-        row.map((value, colIndex) => (
-          <div key={`${rowIndex}:${colIndex}`} className="result-cell">
-            {value.toString()}
-          </div>
-        )),
-      )}
-    </div>
-  )
+  return <Tex latex={matrix.toLatex()} />
 }

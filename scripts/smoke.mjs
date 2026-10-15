@@ -51,10 +51,20 @@ async function clickPath(path) {
 }
 
 const edgeCount = () => page.locator('.react-flow__edge').count()
-const gridText = node => node.locator('.result-grid').textContent().then(text => text.trim())
 const nodeById = id => page.locator(`.react-flow__node[data-id="${id}"]`)
 const nodeIds = () =>
   page.locator('.react-flow__node').evaluateAll(els => els.map(el => el.getAttribute('data-id')))
+
+// Read-only values are typeset with KaTeX, which keeps the LaTeX source in the
+// MathML annotation — the stable thing to assert on.
+const texSource = node =>
+  node.locator('annotation[encoding="application/x-tex"]').textContent().then(text => text.trim())
+const bmatrix = rows => `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`
+const rendered = async node => {
+  const box = await node.locator('.katex').first().boundingBox()
+  const errorCount = await node.locator('.katex-error').count()
+  return !!box && box.width > 0 && box.height > 0 && errorCount === 0
+}
 
 await page.goto(BASE, { waitUntil: 'networkidle' })
 await page.waitForSelector('.react-flow__node', { timeout: 15000 })
@@ -83,16 +93,17 @@ await page.waitForTimeout(250)
 const connection = {
   connected,
   edgeAdded: (await edgeCount()) === edgesBeforeConnect + 1,
-  identityProduct: await gridText(display),
+  rendered: await rendered(display),
+  identityProduct: await texSource(display),
 }
 
 // Exact fractions must survive multiply → driven matrix.
 await matrixA.locator('.cell').first().fill('1/2')
 await page.waitForTimeout(250)
-connection.halfProduct = await gridText(display)
+connection.halfProduct = await texSource(display)
 await matrixB.locator('.cell').first().fill('3')
 await page.waitForTimeout(250)
-connection.threeHalvesProduct = await gridText(display)
+connection.threeHalvesProduct = await texSource(display)
 
 // Editing a cell must not blank the wires for even one frame.
 const errorsBeforeEdit = errors.length
@@ -112,13 +123,14 @@ const matrixInput = {
   edgeAdded: (await edgeCount()) === initialEdges + 2,
   cellsHidden: (await matrixB.locator('.cell').count()) === 0,
   label: (await matrixB.locator('.slot-label').textContent()).trim(),
-  showsUpstream: (await gridText(matrixB)) === '1/2001',
+  rendered: await rendered(matrixB),
+  showsUpstream: (await texSource(matrixB)) === bmatrix(['\\frac{1}{2} & 0', '0 & 1']),
 }
 
 // The driven widget follows its upstream live.
 await matrixA.locator('.cell').first().fill('1/3')
 await page.waitForTimeout(250)
-matrixInput.followsUpstream = (await gridText(matrixB)) === '1/3001'
+matrixInput.followsUpstream = (await texSource(matrixB)) === bmatrix(['\\frac{1}{3} & 0', '0 & 1'])
 
 // Removing the wire makes the widget editable again, with its own values intact.
 await clickPath(page.locator('.react-flow__edge-path').last())
@@ -209,9 +221,10 @@ const failed =
   initialEdges !== 2 ||
   !connection.connected ||
   !connection.edgeAdded ||
-  connection.identityProduct !== '1001' ||
-  connection.halfProduct !== '1/2001' ||
-  connection.threeHalvesProduct !== '3/2001' ||
+  !connection.rendered ||
+  connection.identityProduct !== bmatrix(['1 & 0', '0 & 1']) ||
+  connection.halfProduct !== bmatrix(['\\frac{1}{2} & 0', '0 & 1']) ||
+  connection.threeHalvesProduct !== bmatrix(['\\frac{3}{2} & 0', '0 & 1']) ||
   editSamples.length === 0 ||
   !editSamples.every(Boolean) ||
   editErrors.length > 0 ||
@@ -219,6 +232,7 @@ const failed =
   !matrixInput.edgeAdded ||
   !matrixInput.cellsHidden ||
   matrixInput.label !== 'in' ||
+  !matrixInput.rendered ||
   !matrixInput.showsUpstream ||
   !matrixInput.followsUpstream ||
   !matrixInput.editableAgain ||
