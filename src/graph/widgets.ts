@@ -1,4 +1,4 @@
-import { Fraction } from '../math/fraction'
+import { parseExact, type Algebraic } from '../math/exact'
 import { Matrix, MatrixDimensionError } from '../math/matrix'
 import type { GraphNode, MatrixNodeData, NodeEvaluation } from './types'
 
@@ -62,7 +62,7 @@ export function defaultMatrixData(): MatrixNodeData {
  */
 export function evaluateNode(
   node: GraphNode,
-  inputs: Record<string, Matrix | null>,
+  inputs: Record<string, Matrix<Algebraic> | null>,
   connectedInputs: ReadonlySet<string>,
 ): NodeEvaluation {
   switch (node.kind) {
@@ -98,19 +98,24 @@ export function evaluateNode(
  * connected — is driven: it passes the incoming matrix through unchanged and
  * ignores its own cells (read-only). Without an incoming value it waits.
  */
-function evaluateMatrix(data: MatrixNodeData, incoming: Matrix | null, driven: boolean): NodeEvaluation {
+function evaluateMatrix(
+  data: MatrixNodeData,
+  incoming: Matrix<Algebraic> | null,
+  driven: boolean,
+): NodeEvaluation {
   if (driven) {
     return { outputs: { m: incoming }, error: null }
   }
-  const cells: Fraction[][] = []
+  const cells: Algebraic[][] = []
   for (let row = 0; row < data.rows; row++) {
-    const values: Fraction[] = []
+    const values: Algebraic[] = []
     for (let col = 0; col < data.cols; col++) {
-      const value = Fraction.tryParse(data.cells[row]?.[col] ?? '')
-      if (!value) {
-        return { outputs: { m: null }, error: `Row ${row + 1}, column ${col + 1}: not a valid fraction` }
+      try {
+        values.push(parseExact(data.cells[row]?.[col] ?? ''))
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { outputs: { m: null }, error: `Row ${row + 1}, column ${col + 1}: ${message}` }
       }
-      values.push(value)
     }
     cells.push(values)
   }

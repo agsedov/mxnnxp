@@ -17,9 +17,10 @@ the graph.
   implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
   `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as
   `sqrt(2)`, `(1+sqrt(5))/2`, and complex `1 - i`), with an exact input parser
-  (`sqrt(2)/2`, `2i`, `8^(1/3)`, …) and exact ordering. The widget value path
-  still uses the earlier number-backed `Fraction` and is being migrated onto the
-  tower. See [docs/requirements.md](docs/requirements.md).
+  (`sqrt(2)/2`, `2i`, `8^(1/3)`, …) and exact ordering. Matrix cells parse with
+  `parseExact` and the whole value path (cells, wires, results) computes over the
+  tower — type `sqrt(2)/2` or `1 - i` into a cell and it flows through the graph
+  and renders as TeX. See [docs/requirements.md](docs/requirements.md).
 
 ## Stack
 
@@ -49,7 +50,7 @@ continuously without blanking the canvas, and writes a screenshot to
 ## Layout
 
 ```
-src/math/        Fraction, Matrix, and the exact/ number tower — pure, immutable, tested
+src/math/        the exact/ number tower and the generic Matrix<T> over it — pure, immutable, tested
 src/graph/       widget specs, connection rules, topological evaluation — pure, tested
 src/components/  React Flow canvas, widget components, TeX rendering, graph ⇄ canvas sync
 docs/            requirements (incl. the TeX update-cycle policy)

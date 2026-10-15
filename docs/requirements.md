@@ -78,10 +78,11 @@ Concrete rules:
 - LaTeX is produced by the math layer (`Rational.toLatex`, `Algebraic.toLatex`,
   `Matrix.toLatex`); TeX is display only and never parses or computes (see R6).
 
-**Status.** The tower is implemented and unit-tested in `src/math/exact/`. The
-widget value path (cells, slots, evaluation results) still uses the earlier
-number-backed `Fraction`; migrating it to `Rational`/`Algebraic` via
-`parseExact`, and making `Matrix` generic over `Scalar`, is tracked under Future.
+**Status.** The tower is the app's actual number path. Matrix cells parse with
+`parseExact`, the evaluation engine carries `Algebraic` values through the
+slots, and read-only matrices typeset through the tower's `toLatex`.
+`Matrix<T extends Scalar<T>>` is generic over the tower; the value type is
+`Algebraic`, which already subsumes `Rational`.
 
 ## R3 — Matrix widget
 
@@ -130,8 +131,9 @@ number-backed `Fraction`; migrating it to `Rational`/`Algebraic` via
 - Values a widget did not produce itself (a matrix driven by its input) are
   typeset with TeX instead of being drawn as plain DOM cells: a `pmatrix` —
   exact numbers in round parentheses — with `\frac{1}{2}` for fractions,
-  `\sqrt{2}` for radicals, bare integers, and the sign written in front
-  (`-\frac{3}{4}`), rendered by [KaTeX](https://katex.org).
+  `\sqrt{2}` (and `\frac{\sqrt{2}}{2}`) for radicals, bare integers, complex
+  terms (`1 - i`), and the sign written in front (`-\frac{3}{4}`), rendered by
+  [KaTeX](https://katex.org).
 - LaTeX is produced by the math layer (`Rational.toLatex`, `Algebraic.toLatex`,
   `Matrix.toLatex`) and is unit-tested there; `src/components/Tex.tsx` only turns
   that string into HTML.
@@ -164,7 +166,7 @@ unaffected.
 
 | Layer | Where | Notes |
 |---|---|---|
-| Math | `src/math/` | exact numbers: `Fraction`, `Matrix`, and the `src/math/exact/` tower (`Rational`, `Algebraic`, `parseExact`) — pure, immutable, unit-tested (incl. LaTeX) |
+| Math | `src/math/` | exact numbers: the `src/math/exact/` tower (`Rational`, `Algebraic`, `parseExact`), and the generic `Matrix<T extends Scalar<T>>` that carries them — pure, immutable, unit-tested (incl. LaTeX) |
 | Graph | `src/graph/` | widget specs, connection rules, topological evaluation — pure, unit-tested |
 | UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`), TeX rendering (`Tex.tsx`) |
 
@@ -189,9 +191,9 @@ State ownership follows React Flow's contract:
 
 - More widgets: transpose, inverse, determinant, rank, solve, scalar multiply,
   sum.
-- Migrate the widget value path from `Fraction` to the exact tower
-  (`Rational`/`Algebraic` via `parseExact`) and make `Matrix` generic over
-  `Scalar`, so field-generic algorithms work over either.
+- Field-generic linear algebra (`rref`, `det`, `rank`, `solve`) written against
+  `Scalar<T>` and `Matrix<T>`, taking the field constants as parameters (see
+  `src/math/exact/scalar.ts`), so algorithms run over any exact field.
 - Characteristic polynomial and spectral/Jordan decomposition, with an explicit
   "not representable in the supported exact tower" state rather than a float.
 - Serialization of graphs (localStorage / shareable URLs).

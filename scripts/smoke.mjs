@@ -132,6 +132,14 @@ await matrixA.locator('.cell').first().fill('1/3')
 await page.waitForTimeout(250)
 matrixInput.followsUpstream = (await texSource(matrixB)) === pmatrix(['\\frac{1}{3} & 0', '0 & 1'])
 
+// Irrational and complex cells are exact too, and typeset as such.
+await matrixA.locator('.cell').first().fill('sqrt(2)/2')
+await page.waitForTimeout(250)
+matrixInput.showsRadical = (await texSource(matrixB)) === pmatrix(['\\frac{\\sqrt{2}}{2} & 0', '0 & 1'])
+await matrixA.locator('.cell').first().fill('1 - i')
+await page.waitForTimeout(250)
+matrixInput.showsComplex = (await texSource(matrixB)) === pmatrix(['1 - i & 0', '0 & 1'])
+
 // Removing the wire makes the widget editable again, with its own values intact.
 await clickPath(page.locator('.react-flow__edge-path').last())
 await page.waitForTimeout(250)
@@ -235,6 +243,8 @@ const failed =
   !matrixInput.rendered ||
   !matrixInput.showsUpstream ||
   !matrixInput.followsUpstream ||
+  !matrixInput.showsRadical ||
+  !matrixInput.showsComplex ||
   !matrixInput.editableAgain ||
   matrixInput.errors.length > 0 ||
   !followedMidway ||

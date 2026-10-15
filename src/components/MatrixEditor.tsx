@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from 'react'
-import { Fraction } from '../math/fraction'
+import { tryParseExact } from '../math/exact'
 import type { MatrixNodeData } from '../graph/types'
 
 const MIN_DIM = 1
@@ -21,7 +21,7 @@ interface MatrixEditorProps {
 
 export const MatrixEditor = memo(function MatrixEditor({ data, onChange }: MatrixEditorProps) {
   const validFlags = useMemo(
-    () => data.cells.map(row => row.map(cell => Fraction.tryParse(cell) !== null)),
+    () => data.cells.map(row => row.map(cell => tryParseExact(cell) !== null)),
     [data.cells],
   )
 

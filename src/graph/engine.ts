@@ -1,3 +1,4 @@
+import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, evaluateNode } from './widgets'
 import type {
@@ -136,9 +137,9 @@ export function evaluateGraph(graph: Graph): Evaluation {
     }
   }
 
-  const outputsByNode = new Map<NodeId, Record<string, Matrix | null>>()
+  const outputsByNode = new Map<NodeId, Record<string, Matrix<Algebraic> | null>>()
   for (const node of ordered) {
-    const inputs: Record<string, Matrix | null> = {}
+    const inputs: Record<string, Matrix<Algebraic> | null> = {}
     const connectedInputs = new Set<string>()
     for (const port of WIDGET_SPECS[node.kind].inputs) {
       inputs[port.id] = null

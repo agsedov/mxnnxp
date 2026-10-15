@@ -96,7 +96,41 @@ describe('evaluateGraph', () => {
 
     const result = evaluateGraph(graph).get(matrix.id)
     expect(result?.outputs.m).toBeNull()
-    expect(result?.error).toBe('Row 2, column 1: not a valid fraction')
+    expect(result?.error).toBe('Row 2, column 1: Unknown name "x"')
+  })
+
+  it('evaluates irrational and complex cells exactly', () => {
+    let graph = addNode(createGraph(), 'matrix', 0, 0)
+    const matrix = findMatrix(graph, 0)
+    graph = setMatrixCells(graph, matrix.id, [
+      ['sqrt(2)/2', 'i'],
+      ['0', '1 - i'],
+    ])
+
+    const result = evaluateGraph(graph).get(matrix.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.m?.toString()).toBe('[sqrt(2)/2, i] [0, 1 - i]')
+  })
+
+  it('multiplies irrational matrices exactly', () => {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'matrix', 0, 100)
+    graph = addNode(graph, 'matrixMultiply', 200, 50)
+    const [a, b, multiply] = graph.nodes
+    // A rotation by 45°: [[√2/2, -√2/2], [√2/2, √2/2]]. A² is the 90° rotation.
+    graph = setMatrixCells(graph, a.id, [
+      ['sqrt(2)/2', '-sqrt(2)/2'],
+      ['sqrt(2)/2', 'sqrt(2)/2'],
+    ])
+    graph = setMatrixCells(graph, b.id, [
+      ['sqrt(2)/2', '-sqrt(2)/2'],
+      ['sqrt(2)/2', 'sqrt(2)/2'],
+    ])
+    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'left' })
+    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'right' })
+
+    expect(evaluateGraph(graph).get(multiply.id)?.outputs.product?.toString()).toBe('[0, -1] [1, 0]')
   })
 
   it('multiplies two matrices exactly', () => {
@@ -198,7 +232,7 @@ describe('matrix widget input slot', () => {
     const { graph, upstream, driven } = drivenScene()
     const evaluation = evaluateGraph(setMatrixCells(graph, upstream.id, [['oops']]))
 
-    expect(evaluation.get(upstream.id)?.error).toContain('not a valid fraction')
+    expect(evaluation.get(upstream.id)?.error).toContain('Row 1, column 1')
     expect(evaluation.get(driven.id)?.error).toBeNull()
     expect(evaluation.get(driven.id)?.outputs.m).toBeNull()
   })

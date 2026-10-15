@@ -1,3 +1,4 @@
+import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 
 export type NodeId = string
@@ -13,7 +14,7 @@ export interface PortRef {
 export interface MatrixNodeData {
   rows: number
   cols: number
-  /** Raw text per cell; parsed to exact fractions at evaluation time. */
+  /** Raw text per cell; parsed to exact numbers at evaluation time (see `parseExact`). */
   cells: string[][]
 }
 
@@ -49,7 +50,7 @@ export interface Graph {
 
 export interface NodeEvaluation {
   /** Values produced on the widget's output slots (null = no value right now). */
-  outputs: Record<string, Matrix | null>
+  outputs: Record<string, Matrix<Algebraic> | null>
   /** Human-readable error, if the widget is in an error state. */
   error: string | null
 }

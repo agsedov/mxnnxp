@@ -10,8 +10,7 @@ import { gcd } from './integer'
  *  - the fraction is fully reduced: `gcd(numerator, denominator) === 1`;
  *  - zero is always `0/1`.
  *
- * Unlike the older `Fraction` (which stores safe `number`s), the parts are
- * `BigInt`s, so there is no silent loss of precision above 2^53.
+ * The parts are `BigInt`s, so there is no silent loss of precision above 2^53.
  */
 
 const INTEGER_RE = /^[+-]?\d+$/

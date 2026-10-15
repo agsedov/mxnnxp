@@ -2,6 +2,7 @@ import type { Edge } from '@xyflow/react'
 
 import type { Evaluation, Graph, GraphNode, NodeEvaluation } from '../graph/types'
 import { WIDGET_SPECS } from '../graph/widgets'
+import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 import type { FlowNode, FlowNodeData } from './flowTypes'
 
@@ -34,7 +35,7 @@ function sameStrings(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
-function matricesEqual(a: Matrix | null, b: Matrix | null): boolean {
+function matricesEqual(a: Matrix<Algebraic> | null, b: Matrix<Algebraic> | null): boolean {
   if (a === b) return true
   if (!a || !b || a.rows !== b.rows || a.cols !== b.cols) return false
   for (let row = 0; row < a.rows; row++) {
