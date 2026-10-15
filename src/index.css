@@ -1,0 +1,377 @@
+/* ===== mxnnxp — dark canvas theme ===== */
+
+:root {
+  --bg: #0d0f14;
+  --panel: #151922;
+  --node-bg: #1b202b;
+  --node-border: #2b3242;
+  --node-border-strong: #3d4658;
+  --node-header: #212836;
+  --text: #c8d1e0;
+  --text-dim: #7d8798;
+  --accent: #7aa2f7;
+  --accent-soft: rgba(122, 162, 247, 0.3);
+  --ok: #9ece6a;
+  --error: #f7768e;
+  --cell-bg: #11141b;
+  --mono: ui-monospace, 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.45 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---------- toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--node-border);
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-right: 6px;
+}
+
+.btn {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #212836;
+  border: 1px solid var(--node-border-strong);
+  border-radius: 7px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+}
+
+.btn-quiet:hover {
+  border-color: transparent;
+  color: var(--error);
+}
+
+.hint {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+/* ---------- canvas ---------- */
+
+.canvas {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.react-flow {
+  background: var(--bg);
+}
+
+.react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 3;
+}
+
+.react-flow__edge.edge-error .react-flow__edge-path {
+  stroke: var(--error);
+}
+
+.react-flow__connection-path {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+/* ---------- slots (handles) ---------- */
+
+.react-flow__handle.react-flow__handle-left,
+.react-flow__handle.react-flow__handle-right {
+  width: 12px;
+  height: 12px;
+  background: #39415a;
+  border: 2px solid var(--bg);
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.react-flow__handle:hover {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.react-flow__handle.slot-connected {
+  background: var(--accent);
+}
+
+.react-flow__handle.connectingfrom {
+  background: var(--accent);
+}
+
+.react-flow__handle.connectionindicator {
+  cursor: crosshair;
+}
+
+/* ---------- widgets ---------- */
+
+.widget {
+  position: relative;
+  min-width: 208px;
+  width: max-content;
+  background: var(--node-bg);
+  border: 1px solid var(--node-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+}
+
+.widget.wide {
+  min-width: 244px;
+}
+
+.widget-error {
+  border-color: var(--error);
+}
+
+.widget-selected {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent-soft),
+    0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 8px 0 12px;
+  background: var(--node-header);
+  border-bottom: 1px solid var(--node-border);
+  border-radius: 11px 11px 0 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.widget-header:active {
+  cursor: grabbing;
+}
+
+.widget-title {
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+
+.widget-remove {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: 17px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.widget-remove:hover {
+  color: var(--error);
+  background: rgba(247, 118, 142, 0.14);
+}
+
+.widget-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-message {
+  padding: 0 12px 10px;
+  font-size: 12px;
+}
+
+.widget-message.error {
+  color: var(--error);
+}
+
+/* ---------- multiply widget rows ---------- */
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  height: 28px;
+}
+
+.slot-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+
+.status-row {
+  min-height: 18px;
+  margin-top: 6px;
+}
+
+.msg {
+  font-size: 12px;
+}
+
+.msg.error {
+  color: var(--error);
+}
+
+.msg.ok {
+  color: var(--ok);
+}
+
+.msg.dim {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ---------- matrix editor ---------- */
+
+.matrix-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dim-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 28px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stepper-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+}
+
+.stepper-btn {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border-radius: 5px;
+  border: 1px solid var(--node-border-strong);
+  background: #232a39;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.stepper-value {
+  min-width: 10px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.matrix-grid,
+.result-grid {
+  display: grid;
+  gap: 5px;
+}
+
+.cell {
+  width: 46px;
+  height: 28px;
+  padding: 0 4px;
+  background: var(--cell-bg);
+  border: 1px solid var(--node-border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.cell:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.cell-invalid {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.result-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 46px;
+  height: 26px;
+  padding: 0 7px;
+  background: var(--cell-bg);
+  border: 1px solid var(--node-border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ok);
+}
