@@ -7,6 +7,8 @@ import { MatrixView } from '../MatrixView'
 import type { FlowNode } from '../flowTypes'
 import type { MatrixNodeData } from '../../graph/types'
 import { MATRIX_INPUT_PORT } from '../../graph/widgets'
+import { useI18n } from '../../i18n/context'
+import { describeNodeError, portLabelKey, WIDGET_TITLE_KEY } from '../../i18n/labels'
 
 /**
  * Y offset of the slots, aligned with the first body row:
@@ -15,6 +17,7 @@ import { MATRIX_INPUT_PORT } from '../../graph/widgets'
 const SLOT_Y = 58
 
 export function MatrixNode({ data, selected }: NodeProps<FlowNode>) {
+  const { t } = useI18n()
   const { updateMatrix, removeNode } = useContext(GraphActionsContext)
   const { source, evaluation, connectedInputs, connectedOutputs } = data
 
@@ -31,12 +34,13 @@ export function MatrixNode({ data, selected }: NodeProps<FlowNode>) {
   // matrix is shown read-only and its own editable values are not in use.
   const driven = connectedInputs.includes(MATRIX_INPUT_PORT)
   const incoming = driven ? (evaluation?.outputs.m ?? null) : null
+  const error = evaluation?.error ? describeNodeError(t, evaluation.error) : null
 
   return (
     <div className={`widget${evaluation?.error ? ' widget-error' : ''}${selected ? ' widget-selected' : ''}`}>
       <div className="widget-header">
-        <span className="widget-title">Matrix</span>
-        <button className="widget-remove nodrag" title="Remove widget" onClick={() => removeNode(source.id)}>
+        <span className="widget-title">{t(WIDGET_TITLE_KEY.matrix)}</span>
+        <button className="widget-remove nodrag" title={t('widget.remove')} onClick={() => removeNode(source.id)}>
           ×
         </button>
       </div>
@@ -44,8 +48,8 @@ export function MatrixNode({ data, selected }: NodeProps<FlowNode>) {
         {driven ? (
           <>
             <div className="slot-row">
-              <span className="slot-label">in</span>
-              <span className="msg dim">{incoming ? 'driven by input' : 'waiting for input'}</span>
+              <span className="slot-label">{t(portLabelKey('matrix', MATRIX_INPUT_PORT))}</span>
+              <span className="msg dim">{incoming ? t('matrix.driven') : t('matrix.waiting')}</span>
             </div>
             {incoming && <MatrixView matrix={incoming} />}
           </>
@@ -53,7 +57,11 @@ export function MatrixNode({ data, selected }: NodeProps<FlowNode>) {
           <MatrixEditor data={source.data} onChange={handleChange} />
         )}
       </div>
-      {evaluation?.error && <div className="widget-message error">{evaluation.error}</div>}
+      {error && (
+        <div className="widget-message error" title={error.detail}>
+          {error.text}
+        </div>
+      )}
       <Handle
         type="target"
         position={Position.Left}

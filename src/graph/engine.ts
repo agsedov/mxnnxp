@@ -85,7 +85,7 @@ function assertPort(graph: Graph, nodeId: NodeId, portId: string, direction: 'in
   const spec = WIDGET_SPECS[node.kind]
   const ports = direction === 'output' ? spec.outputs : spec.inputs
   if (!ports.some(p => p.id === portId)) {
-    throw new Error(`Widget "${spec.label}" has no ${direction} slot "${portId}"`)
+    throw new Error(`Widget "${spec.kind}" has no ${direction} slot "${portId}"`)
   }
 }
 
@@ -156,7 +156,7 @@ export function evaluateGraph(graph: Graph): Evaluation {
   // Everything not visited by Kahn's algorithm is part of (or downstream of) a cycle.
   for (const node of graph.nodes) {
     if (!evaluation.has(node.id)) {
-      evaluation.set(node.id, { outputs: {}, error: 'Cycle detected' })
+      evaluation.set(node.id, { outputs: {}, error: { code: 'cycle' } })
     }
   }
 

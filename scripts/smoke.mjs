@@ -198,6 +198,30 @@ const midEdgesVisible = midEdges.length >= 2 && midEdges.every(Boolean)
 const postEdgesVisible = postEdges.length >= 2 && postEdges.every(Boolean)
 const dragErrors = errors.slice(errorsBeforeDrag).filter(e => e.includes('015'))
 
+// --- Language switching: the interface is bilingual (English / Russian) and the
+// choice is remembered. Exercised last so it cannot disturb the graph checks.
+const errorsBeforeLocale = errors.length
+const englishBtn = page.getByRole('button', { name: 'EN', exact: true })
+const russianBtn = page.getByRole('button', { name: 'RU', exact: true })
+await russianBtn.click()
+await page.waitForTimeout(200)
+const locale = {
+  htmlLang: await page.evaluate(() => document.documentElement.lang),
+  addMatrix: (await page.locator('.toolbar .btn').first().textContent()).trim(),
+  multiplyTitle: (await multiply.locator('.widget-title').textContent()).trim(),
+  leftSlot: (await multiply.locator('.slot-label').first().textContent()).trim(),
+  stored: await page.evaluate(() => localStorage.getItem('mxnnxp.locale')),
+}
+await matrixA.locator('.cell').first().fill('x')
+await page.waitForTimeout(250)
+locale.cellError = (await matrixA.locator('.widget-message.error').textContent()).trim()
+locale.cellErrorDetail = await matrixA.locator('.widget-message.error').getAttribute('title')
+await englishBtn.click()
+await page.waitForTimeout(200)
+locale.backToEnglish = (await page.locator('.toolbar .btn').first().textContent()).trim()
+locale.htmlLangAfter = await page.evaluate(() => document.documentElement.lang)
+locale.errors = errors.slice(errorsBeforeLocale)
+
 await page.screenshot({ path: '/tmp/opencode/smoke.png' })
 await browser.close()
 
@@ -220,6 +244,7 @@ const report = {
     postEdgesVisible,
     errors: dragErrors,
   },
+  locale,
   errors,
 }
 console.log(JSON.stringify(report, null, 2))
@@ -254,5 +279,15 @@ const failed =
   !midEdgesVisible ||
   !postEdgesVisible ||
   dragErrors.length > 0 ||
+  locale.htmlLang !== 'ru' ||
+  locale.addMatrix !== '+ Матрица' ||
+  locale.multiplyTitle !== 'Умножение матриц' ||
+  locale.leftSlot !== 'Левая' ||
+  locale.stored !== 'ru' ||
+  locale.cellError !== 'Строка 1, столбец 1: недопустимое точное число' ||
+  locale.cellErrorDetail !== 'Unknown name "x"' ||
+  locale.backToEnglish !== '+ Matrix' ||
+  locale.htmlLangAfter !== 'en' ||
+  locale.errors.length > 0 ||
   errors.length > 0
 process.exit(failed ? 1 : 0)

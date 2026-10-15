@@ -96,7 +96,7 @@ describe('evaluateGraph', () => {
 
     const result = evaluateGraph(graph).get(matrix.id)
     expect(result?.outputs.m).toBeNull()
-    expect(result?.error).toBe('Row 2, column 1: Unknown name "x"')
+    expect(result?.error).toEqual({ code: 'cell', row: 2, col: 1, reason: 'Unknown name "x"' })
   })
 
   it('evaluates irrational and complex cells exactly', () => {
@@ -162,7 +162,7 @@ describe('evaluateGraph', () => {
 
     const result = evaluateGraph(graph).get(multiply.id)
     expect(result?.outputs.product).toBeNull()
-    expect(result?.error).toContain('Dimension mismatch')
+    expect(result?.error).toEqual({ code: 'dimension', leftRows: 1, leftCols: 3, rightRows: 1, rightCols: 2 })
   })
 
   it('waits quietly while inputs are unconnected', () => {
@@ -182,8 +182,8 @@ describe('evaluateGraph', () => {
     graph = connect(graph, { node: second.id, port: 'product' }, { node: first.id, port: 'left' })
 
     const evaluation = evaluateGraph(graph)
-    expect(evaluation.get(first.id)?.error).toBe('Cycle detected')
-    expect(evaluation.get(second.id)?.error).toBe('Cycle detected')
+    expect(evaluation.get(first.id)?.error).toEqual({ code: 'cycle' })
+    expect(evaluation.get(second.id)?.error).toEqual({ code: 'cycle' })
   })
 })
 
@@ -232,7 +232,7 @@ describe('matrix widget input slot', () => {
     const { graph, upstream, driven } = drivenScene()
     const evaluation = evaluateGraph(setMatrixCells(graph, upstream.id, [['oops']]))
 
-    expect(evaluation.get(upstream.id)?.error).toContain('Row 1, column 1')
+    expect(evaluation.get(upstream.id)?.error).toMatchObject({ code: 'cell', row: 1, col: 1 })
     expect(evaluation.get(driven.id)?.error).toBeNull()
     expect(evaluation.get(driven.id)?.outputs.m).toBeNull()
   })

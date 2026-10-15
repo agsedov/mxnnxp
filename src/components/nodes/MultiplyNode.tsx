@@ -4,6 +4,8 @@ import { useContext } from 'react'
 import { GraphActionsContext } from '../GraphActionsContext'
 import { WIDGET_SPECS } from '../../graph/widgets'
 import type { FlowNode } from '../flowTypes'
+import { useI18n } from '../../i18n/context'
+import { describeNodeError, portLabelKey, WIDGET_TITLE_KEY } from '../../i18n/labels'
 
 /**
  * Y offsets of the slots, aligned with the body rows:
@@ -14,6 +16,7 @@ const SLOT_RIGHT_Y = 86
 
 export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
   const { removeNode } = useContext(GraphActionsContext)
+  const { t } = useI18n()
   const { source, evaluation, connectedInputs, connectedOutputs } = data
 
   if (source.kind !== 'matrixMultiply') {
@@ -25,20 +28,26 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
 
   let status
   if (evaluation?.error) {
-    status = <span className="msg error">{evaluation.error}</span>
+    const error = describeNodeError(t, evaluation.error)
+    status = (
+      <span className="msg error" title={error.detail}>
+        {error.text}
+      </span>
+    )
   } else if (product) {
-    status = <span className="msg ok">{`${product.rows}×${product.cols} result`}</span>
+    status = <span className="msg ok">{t('multiply.result', { rows: product.rows, cols: product.cols })}</span>
   } else if (missing.length > 0) {
-    status = <span className="msg dim">waiting for {missing.map(port => port.label.toLowerCase()).join(' and ')}</span>
+    const ports = missing.map(port => t(portLabelKey('matrixMultiply', port.id))).join(` ${t('conjunction.and')} `)
+    status = <span className="msg dim">{t('multiply.waiting', { ports })}</span>
   } else {
-    status = <span className="msg dim">no value yet</span>
+    status = <span className="msg dim">{t('multiply.noValue')}</span>
   }
 
   return (
     <div className={`widget${evaluation?.error ? ' widget-error' : ''}${selected ? ' widget-selected' : ''}`}>
       <div className="widget-header">
-        <span className="widget-title">Matrix multiply</span>
-        <button className="widget-remove nodrag" title="Remove widget" onClick={() => removeNode(source.id)}>
+        <span className="widget-title">{t(WIDGET_TITLE_KEY.matrixMultiply)}</span>
+        <button className="widget-remove nodrag" title={t('widget.remove')} onClick={() => removeNode(source.id)}>
           ×
         </button>
       </div>
@@ -51,7 +60,7 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
             style={{ top: SLOT_LEFT_Y }}
             className={connectedInputs.includes('left') ? 'slot-connected' : undefined}
           />
-          <span className="slot-label">Left</span>
+          <span className="slot-label">{t(portLabelKey('matrixMultiply', 'left'))}</span>
         </div>
         <div className="slot-row">
           <Handle
@@ -61,7 +70,7 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
             style={{ top: SLOT_RIGHT_Y }}
             className={connectedInputs.includes('right') ? 'slot-connected' : undefined}
           />
-          <span className="slot-label">Right</span>
+          <span className="slot-label">{t(portLabelKey('matrixMultiply', 'right'))}</span>
         </div>
         <div className="status-row">{status}</div>
       </div>

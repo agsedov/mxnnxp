@@ -21,6 +21,10 @@ the graph.
   `parseExact` and the whole value path (cells, wires, results) computes over the
   tower — type `sqrt(2)/2` or `1 - i` into a cell and it flows through the graph
   and renders as TeX. See [docs/requirements.md](docs/requirements.md).
+- **English / Russian interface** — a toolbar switch flips the whole UI between
+  the two languages at once, remembers the choice, and keeps `<html lang>` in
+  step. Translations live in `src/i18n/`; the graph engine itself stays
+  locale-free and reports structured errors the UI renders per language.
 
 ## Stack
 
@@ -43,15 +47,16 @@ npm run lint     # oxlint
 
 With the dev server running, `npm run smoke` renders the app headlessly
 (Playwright), checks that values flow, that slot-dragging connects widgets, that
-read-only matrices are typeset with TeX, and that dragging a widget redraws
-continuously without blanking the canvas, and writes a screenshot to
-`/tmp/opencode/smoke.png`.
+read-only matrices are typeset with TeX, that dragging a widget redraws
+continuously without blanking the canvas, that the language switch works, and
+writes a screenshot to `/tmp/opencode/smoke.png`.
 
 ## Layout
 
 ```
 src/math/        the exact/ number tower and the generic Matrix<T> over it — pure, immutable, tested
-src/graph/       widget specs, connection rules, topological evaluation — pure, tested
+src/graph/       widget specs, connection rules, topological evaluation, structured errors — pure, tested
+src/i18n/        English/Russian catalogue, provider + useI18n, label and error text
 src/components/  React Flow canvas, widget components, TeX rendering, graph ⇄ canvas sync
 docs/            requirements (incl. the TeX update-cycle policy)
 ```

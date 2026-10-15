@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from 'react'
 import { tryParseExact } from '../math/exact'
 import type { MatrixNodeData } from '../graph/types'
+import { useI18n } from '../i18n/context'
 
 const MIN_DIM = 1
 const MAX_DIM = 6
@@ -20,6 +21,7 @@ interface MatrixEditorProps {
 }
 
 export const MatrixEditor = memo(function MatrixEditor({ data, onChange }: MatrixEditorProps) {
+  const { t } = useI18n()
   const validFlags = useMemo(
     () => data.cells.map(row => row.map(cell => tryParseExact(cell) !== null)),
     [data.cells],
@@ -50,13 +52,17 @@ export const MatrixEditor = memo(function MatrixEditor({ data, onChange }: Matri
     <div className="matrix-editor nodrag">
       <div className="dim-row">
         <Stepper
-          label="rows"
+          label={t('matrix.stepper.rows')}
+          decrementTitle={t('matrix.stepper.fewerRows')}
+          incrementTitle={t('matrix.stepper.moreRows')}
           value={data.rows}
           onDecrement={() => resize(data.rows - 1, data.cols)}
           onIncrement={() => resize(data.rows + 1, data.cols)}
         />
         <Stepper
-          label="cols"
+          label={t('matrix.stepper.cols')}
+          decrementTitle={t('matrix.stepper.fewerCols')}
+          incrementTitle={t('matrix.stepper.moreCols')}
           value={data.cols}
           onDecrement={() => resize(data.rows, data.cols - 1)}
           onIncrement={() => resize(data.rows, data.cols + 1)}
@@ -71,7 +77,7 @@ export const MatrixEditor = memo(function MatrixEditor({ data, onChange }: Matri
               value={cell}
               onChange={event => setCell(rowIndex, colIndex, event.target.value)}
               spellCheck={false}
-              aria-label={`Row ${rowIndex + 1} column ${colIndex + 1}`}
+              aria-label={t('matrix.cellLabel', { row: rowIndex + 1, col: colIndex + 1 })}
             />
           )),
         )}
@@ -82,11 +88,15 @@ export const MatrixEditor = memo(function MatrixEditor({ data, onChange }: Matri
 
 function Stepper({
   label,
+  decrementTitle,
+  incrementTitle,
   value,
   onDecrement,
   onIncrement,
 }: {
   label: string
+  decrementTitle: string
+  incrementTitle: string
   value: number
   onDecrement: () => void
   onIncrement: () => void
@@ -94,11 +104,11 @@ function Stepper({
   return (
     <span className="stepper">
       <span className="stepper-label">{label}</span>
-      <button className="stepper-btn nodrag" onClick={onDecrement} disabled={value <= MIN_DIM} title={`Fewer ${label}`}>
+      <button className="stepper-btn nodrag" onClick={onDecrement} disabled={value <= MIN_DIM} title={decrementTitle}>
         −
       </button>
       <span className="stepper-value">{value}</span>
-      <button className="stepper-btn nodrag" onClick={onIncrement} disabled={value >= MAX_DIM} title={`More ${label}`}>
+      <button className="stepper-btn nodrag" onClick={onIncrement} disabled={value >= MAX_DIM} title={incrementTitle}>
         +
       </button>
     </span>

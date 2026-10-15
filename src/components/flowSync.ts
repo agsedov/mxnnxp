@@ -1,6 +1,6 @@
 import type { Edge } from '@xyflow/react'
 
-import type { Evaluation, Graph, GraphNode, NodeEvaluation } from '../graph/types'
+import type { Evaluation, Graph, GraphNode, NodeError, NodeEvaluation } from '../graph/types'
 import { WIDGET_SPECS } from '../graph/widgets'
 import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
@@ -46,10 +46,33 @@ function matricesEqual(a: Matrix<Algebraic> | null, b: Matrix<Algebraic> | null)
   return true
 }
 
+/**
+ * Value comparison for errors: the engine rebuilds evaluation objects on every
+ * run, so reference equality would make every erroring widget churn.
+ */
+function nodeErrorsEqual(a: NodeError | null, b: NodeError | null): boolean {
+  if (a === b) return true
+  if (!a || !b || a.code !== b.code) return false
+  switch (a.code) {
+    case 'cycle':
+      return true
+    case 'dimension':
+      return (
+        b.code === 'dimension' &&
+        a.leftRows === b.leftRows &&
+        a.leftCols === b.leftCols &&
+        a.rightRows === b.rightRows &&
+        a.rightCols === b.rightCols
+      )
+    case 'cell':
+      return b.code === 'cell' && a.row === b.row && a.col === b.col && a.reason === b.reason
+  }
+}
+
 /** Value comparison: the engine rebuilds evaluation objects on every run. */
 function evaluationEquals(a: NodeEvaluation | null, b: NodeEvaluation | null): boolean {
   if (a === b) return true
-  if (!a || !b || a.error !== b.error) return false
+  if (!a || !b || !nodeErrorsEqual(a.error, b.error)) return false
   const ports = Object.keys(a.outputs)
   const otherPorts = Object.keys(b.outputs)
   return (

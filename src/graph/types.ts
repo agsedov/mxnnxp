@@ -48,11 +48,29 @@ export interface Graph {
   connections: Connection[]
 }
 
+/**
+ * A widget error, as structured data rather than a sentence.
+ *
+ * The engine stays free of presentation and locale: it reports *what* went
+ * wrong, and the UI turns that into text (see `describeNodeError`). `reason`
+ * carries the raw parser message for diagnostics.
+ */
+export type NodeError =
+  | { readonly code: 'cycle' }
+  | {
+      readonly code: 'dimension'
+      readonly leftRows: number
+      readonly leftCols: number
+      readonly rightRows: number
+      readonly rightCols: number
+    }
+  | { readonly code: 'cell'; readonly row: number; readonly col: number; readonly reason: string }
+
 export interface NodeEvaluation {
   /** Values produced on the widget's output slots (null = no value right now). */
   outputs: Record<string, Matrix<Algebraic> | null>
-  /** Human-readable error, if the widget is in an error state. */
-  error: string | null
+  /** Why the widget is in an error state, if it is. */
+  error: NodeError | null
 }
 
 /** Evaluation result per widget. */

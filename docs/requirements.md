@@ -121,8 +121,7 @@ slots, and read-only matrices typeset through the tower's `toLatex`.
   sees the values of all its inputs in the same pass.
 - Connections into slots that do not exist, dangling connections, and
   self-connections are ignored/rejected.
-- Cycles are allowed to be drawn but every widget involved reports
-  `Cycle detected`.
+- Cycles are allowed to be drawn but every widget involved reports a cycle error.
 - Errors do not cascade further than the widget itself: downstream widgets
   simply receive *no value* on that slot and wait.
 
@@ -160,6 +159,25 @@ Freezing is deliberately a one-line, revertible measure for development speed:
 values may look stale on screen while it is on, but the graph itself is
 unaffected.
 
+## R7 — Localization
+
+- The interface is bilingual: **English** and **Russian** — and only those two.
+- A toolbar switch (EN / RU) changes the language immediately, with no reload.
+  The choice is remembered across reloads and kept in step with `<html lang>`.
+- Every user-facing string is translated: widget titles, slot labels, status
+  messages and errors.
+- The graph engine stays locale-free. It reports **structured** errors
+  (`NodeError` in `src/graph/types.ts` — a cycle, a dimension mismatch, a bad
+  cell) rather than sentences, and the UI renders them in the active language
+  (`describeNodeError` in `src/i18n/labels.ts`), so one evaluation drives either
+  language. A cell error keeps the raw parser message as a tooltip.
+- Translations live in `src/i18n/messages.ts`. Both locales share one key set:
+  the Russian table is typed against the English key list, so a missing
+  translation is a compile error. Widget/slot labels map to keys in
+  `src/i18n/labels.ts`.
+- The exact-number `toString()` and LaTeX forms are language-neutral and
+  unchanged by the locale.
+
 ---
 
 ## Architecture
@@ -167,7 +185,8 @@ unaffected.
 | Layer | Where | Notes |
 |---|---|---|
 | Math | `src/math/` | exact numbers: the `src/math/exact/` tower (`Rational`, `Algebraic`, `parseExact`), and the generic `Matrix<T extends Scalar<T>>` that carries them — pure, immutable, unit-tested (incl. LaTeX) |
-| Graph | `src/graph/` | widget specs, connection rules, topological evaluation — pure, unit-tested |
+| Graph | `src/graph/` | widget specs, connection rules, topological evaluation, structured errors — pure, unit-tested |
+| i18n | `src/i18n/` | English/Russian catalogue (`messages.ts`), provider + `useI18n` (`I18nProvider.tsx`, `context.ts`), widget/slot labels and error text (`labels.ts`) |
 | UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`), TeX rendering (`Tex.tsx`) |
 
 React Flow provides only the interaction/geometry mechanics (dragging, slot

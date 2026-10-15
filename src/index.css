@@ -95,6 +95,40 @@ body {
   color: var(--text-dim);
 }
 
+/* ---------- language switch ---------- */
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--node-border-strong);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.lang-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 4px 9px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.lang-btn:hover {
+  color: #fff;
+}
+
+.lang-btn-active {
+  color: #fff;
+  background: var(--accent-soft);
+}
+
+.lang-btn + .lang-btn {
+  border-left: 1px solid var(--node-border-strong);
+}
+
 /* ---------- canvas ---------- */
 
 .canvas {

@@ -4,13 +4,15 @@ import type { GraphNode, MatrixNodeData, NodeEvaluation } from './types'
 
 export interface PortSpec {
   id: string
-  label: string
 }
 
-/** Static description of a widget kind: slots and presentation. */
+/**
+ * Static description of a widget kind: its slots. Presentation (the title and
+ * slot labels, in the active language) lives in the UI — see
+ * `src/i18n/labels.ts`.
+ */
 export interface WidgetSpec {
   kind: GraphNode['kind']
-  label: string
   inputs: PortSpec[]
   outputs: PortSpec[]
 }
@@ -25,18 +27,13 @@ export const MATRIX_INPUT_PORT = 'in'
 export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
   matrix: {
     kind: 'matrix',
-    label: 'Matrix',
-    inputs: [{ id: MATRIX_INPUT_PORT, label: 'in' }],
-    outputs: [{ id: 'm', label: 'matrix' }],
+    inputs: [{ id: MATRIX_INPUT_PORT }],
+    outputs: [{ id: 'm' }],
   },
   matrixMultiply: {
     kind: 'matrixMultiply',
-    label: 'Matrix multiply',
-    inputs: [
-      { id: 'left', label: 'Left' },
-      { id: 'right', label: 'Right' },
-    ],
-    outputs: [{ id: 'product', label: 'Left × Right' }],
+    inputs: [{ id: 'left' }, { id: 'right' }],
+    outputs: [{ id: 'product' }],
   },
 }
 
@@ -84,7 +81,13 @@ export function evaluateNode(
         if (error instanceof MatrixDimensionError) {
           return {
             outputs: { product: null },
-            error: `Dimension mismatch: ${left.rows}×${left.cols} times ${right.rows}×${right.cols}`,
+            error: {
+              code: 'dimension',
+              leftRows: left.rows,
+              leftCols: left.cols,
+              rightRows: right.rows,
+              rightCols: right.cols,
+            },
           }
         }
         throw error
@@ -113,8 +116,8 @@ function evaluateMatrix(
       try {
         values.push(parseExact(data.cells[row]?.[col] ?? ''))
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        return { outputs: { m: null }, error: `Row ${row + 1}, column ${col + 1}: ${message}` }
+        const reason = error instanceof Error ? error.message : String(error)
+        return { outputs: { m: null }, error: { code: 'cell', row: row + 1, col: col + 1, reason } }
       }
     }
     cells.push(values)

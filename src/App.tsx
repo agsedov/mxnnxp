@@ -14,10 +14,12 @@ import {
 } from '@xyflow/react'
 
 import { GraphActionsContext } from './components/GraphActionsContext'
+import { LanguageSwitch } from './components/LanguageSwitch'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import type { FlowNode } from './components/flowTypes'
 import { reconcileEdges, reconcileNodes } from './components/flowSync'
+import { useI18n } from './i18n/context'
 import {
   addNode,
   connect,
@@ -49,6 +51,7 @@ function createInitialGraph(): Graph {
 }
 
 export default function App() {
+  const { t } = useI18n()
   const [graph, setGraph] = useState<Graph>(createInitialGraph)
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
@@ -151,17 +154,16 @@ export default function App() {
         <header className="toolbar">
           <span className="brand">mxnnxp</span>
           <button className="btn" onClick={() => addWidget('matrix')}>
-            + Matrix
+            {t('toolbar.addMatrix')}
           </button>
           <button className="btn" onClick={() => addWidget('matrixMultiply')}>
-            + Multiply
+            {t('toolbar.addMultiply')}
           </button>
           <button className="btn btn-quiet" onClick={reset}>
-            Reset
+            {t('toolbar.reset')}
           </button>
-          <span className="hint">
-            drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove
-          </span>
+          <span className="hint">{t('toolbar.hint')}</span>
+          <LanguageSwitch />
         </header>
         <div className="canvas">
           <ReactFlow<FlowNode, Edge>
