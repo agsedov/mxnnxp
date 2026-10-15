@@ -66,7 +66,8 @@ Concrete rules:
   Removing the connection restores the editable grid with the previous values.
 - While the input slot is connected but carries no value, the widget waits
   (calm state, no error) and produces no output.
-- Driven display is typeset with TeX (see R6): a bracketed matrix of fractions.
+- Driven display is typeset with TeX (see R6): a matrix of fractions in round
+  parentheses.
 - Invalid cell (while not driven) → cell highlighted red and widget error
   message; output value is withheld until all cells parse.
 
@@ -98,9 +99,10 @@ Concrete rules:
 ## R6 — TeX rendering (read-only values)
 
 - Values a widget did not produce itself (a matrix driven by its input) are
-  typeset with TeX instead of being drawn as plain DOM cells: a bracketed
-  `bmatrix` of exact fractions — `\frac{1}{2}`, bare integers, sign in front
-  (`-\frac{3}{4}`) — rendered by [KaTeX](https://katex.org).
+  typeset with TeX instead of being drawn as plain DOM cells: a `pmatrix` —
+  exact fractions in round parentheses — with `\frac{1}{2}` for fractions, bare
+  integers, and the sign written in front (`-\frac{3}{4}`), rendered by
+  [KaTeX](https://katex.org).
 - LaTeX is produced by the math layer (`Fraction.toLatex`, `Matrix.toLatex`) and
   is unit-tested there; `src/components/Tex.tsx` only turns that string into
   HTML.

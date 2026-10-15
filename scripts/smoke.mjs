@@ -59,7 +59,7 @@ const nodeIds = () =>
 // MathML annotation — the stable thing to assert on.
 const texSource = node =>
   node.locator('annotation[encoding="application/x-tex"]').textContent().then(text => text.trim())
-const bmatrix = rows => `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`
+const pmatrix = rows => `\\begin{pmatrix} ${rows.join(' \\\\ ')} \\end{pmatrix}`
 const rendered = async node => {
   const box = await node.locator('.katex').first().boundingBox()
   const errorCount = await node.locator('.katex-error').count()
@@ -124,13 +124,13 @@ const matrixInput = {
   cellsHidden: (await matrixB.locator('.cell').count()) === 0,
   label: (await matrixB.locator('.slot-label').textContent()).trim(),
   rendered: await rendered(matrixB),
-  showsUpstream: (await texSource(matrixB)) === bmatrix(['\\frac{1}{2} & 0', '0 & 1']),
+  showsUpstream: (await texSource(matrixB)) === pmatrix(['\\frac{1}{2} & 0', '0 & 1']),
 }
 
 // The driven widget follows its upstream live.
 await matrixA.locator('.cell').first().fill('1/3')
 await page.waitForTimeout(250)
-matrixInput.followsUpstream = (await texSource(matrixB)) === bmatrix(['\\frac{1}{3} & 0', '0 & 1'])
+matrixInput.followsUpstream = (await texSource(matrixB)) === pmatrix(['\\frac{1}{3} & 0', '0 & 1'])
 
 // Removing the wire makes the widget editable again, with its own values intact.
 await clickPath(page.locator('.react-flow__edge-path').last())
@@ -222,9 +222,9 @@ const failed =
   !connection.connected ||
   !connection.edgeAdded ||
   !connection.rendered ||
-  connection.identityProduct !== bmatrix(['1 & 0', '0 & 1']) ||
-  connection.halfProduct !== bmatrix(['\\frac{1}{2} & 0', '0 & 1']) ||
-  connection.threeHalvesProduct !== bmatrix(['\\frac{3}{2} & 0', '0 & 1']) ||
+  connection.identityProduct !== pmatrix(['1 & 0', '0 & 1']) ||
+  connection.halfProduct !== pmatrix(['\\frac{1}{2} & 0', '0 & 1']) ||
+  connection.threeHalvesProduct !== pmatrix(['\\frac{3}{2} & 0', '0 & 1']) ||
   editSamples.length === 0 ||
   !editSamples.every(Boolean) ||
   editErrors.length > 0 ||

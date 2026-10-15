@@ -86,13 +86,13 @@ export class Matrix {
   }
 
   /**
-   * LaTeX for this matrix as a bracketed `bmatrix`, e.g.
-   * `\begin{bmatrix} 1 & \frac{1}{2} \\ 0 & 1 \end{bmatrix}`. Meant for a TeX
+   * LaTeX for this matrix as a `pmatrix` — round parentheses, e.g.
+   * `\begin{pmatrix} 1 & \frac{1}{2} \\ 0 & 1 \end{pmatrix}`. Meant for a TeX
    * renderer (KaTeX); the plain `toString()` stays the debug/UI-free form.
    */
   toLatex(): string {
     const rows = this.data.map(row => row.map(entry => entry.toLatex()).join(' & '))
-    return `\\begin{bmatrix} ${rows.join(' \\\\ ')} \\end{bmatrix}`
+    return `\\begin{pmatrix} ${rows.join(' \\\\ ')} \\end{pmatrix}`
   }
 }
 

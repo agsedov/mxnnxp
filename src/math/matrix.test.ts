@@ -64,14 +64,14 @@ describe('Matrix.multiply', () => {
 })
 
 describe('Matrix.toLatex', () => {
-  it('renders a bracketed matrix with fractions', () => {
+  it('renders a parenthesised matrix with fractions', () => {
     const matrix = Matrix.fromRows([[f('1/2'), f('0')], [f('0'), f('-3/4')]])
-    expect(matrix.toLatex()).toBe('\\begin{bmatrix} \\frac{1}{2} & 0 \\\\ 0 & -\\frac{3}{4} \\end{bmatrix}')
+    expect(matrix.toLatex()).toBe('\\begin{pmatrix} \\frac{1}{2} & 0 \\\\ 0 & -\\frac{3}{4} \\end{pmatrix}')
   })
 
   it('renders a row matrix', () => {
     expect(Matrix.fromRows([[f('1'), f('2'), f('3')]]).toLatex()).toBe(
-      '\\begin{bmatrix} 1 & 2 & 3 \\end{bmatrix}',
+      '\\begin{pmatrix} 1 & 2 & 3 \\end{pmatrix}',
     )
   })
 })
