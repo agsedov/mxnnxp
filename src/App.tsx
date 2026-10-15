@@ -19,6 +19,7 @@ import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
+import { VectorCanvasNode } from './components/nodes/VectorCanvasNode'
 import type { FlowNode } from './components/flowTypes'
 import { reconcileEdges, reconcileNodes } from './components/flowSync'
 import { useI18n } from './i18n/context'
@@ -41,6 +42,7 @@ const NODE_TYPES = {
   matrixMultiply: MultiplyNode,
   scalar: ScalarNode,
   scalarMultiply: ScalarMultiplyNode,
+  vectorCanvas: VectorCanvasNode,
 }
 
 /** Demo scene: A × B with both factors editable. */
