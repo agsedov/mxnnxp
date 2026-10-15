@@ -27,7 +27,9 @@ export function addNode(graph: Graph, kind: WidgetKind, x: number, y: number): G
       ? { id, kind, x, y, data: defaultMatrixData() }
       : kind === 'scalar'
         ? { id, kind, x, y, data: defaultScalarData() }
-        : { id, kind, x, y }
+        : kind === 'vectorCanvas'
+          ? { id, kind, x, y, data: { mode: 'rows' } }
+          : { id, kind, x, y }
   return { nodes: [...graph.nodes, node], connections: graph.connections }
 }
 

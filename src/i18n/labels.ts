@@ -11,6 +11,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   matrixMultiply: 'widget.matrixMultiply.title',
   scalar: 'widget.scalar.title',
   scalarMultiply: 'widget.scalarMultiply.title',
+  vectorCanvas: 'widget.vectorCanvas.title',
 }
 
 const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
@@ -30,6 +31,9 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
     matrix: 'widget.scalarMultiply.port.matrix',
     scalar: 'widget.scalarMultiply.port.scalar',
     product: 'widget.scalarMultiply.port.product',
+  },
+  vectorCanvas: {
+    m: 'widget.vectorCanvas.port.m',
   },
 }
 

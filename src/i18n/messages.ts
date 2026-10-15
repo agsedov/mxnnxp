@@ -48,6 +48,7 @@ export const en = {
   'widget.matrixMultiply.title': 'Matrix multiply',
   'widget.scalar.title': 'Scalar',
   'widget.scalarMultiply.title': 'Scalar multiply',
+  'widget.vectorCanvas.title': 'Vector canvas',
   'widget.remove': 'Remove widget',
 
   'widget.matrix.port.in': 'in',
@@ -59,6 +60,7 @@ export const en = {
   'widget.scalarMultiply.port.matrix': 'Matrix',
   'widget.scalarMultiply.port.scalar': 'Scalar',
   'widget.scalarMultiply.port.product': 'Product',
+  'widget.vectorCanvas.port.m': 'matrix',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -75,6 +77,10 @@ export const en = {
   'multiply.noValue': 'no value yet',
   'scalar.error': 'not a valid exact number',
   'scalarMultiply.waiting': 'waiting for {ports}',
+  'vectorCanvas.mode.rows': 'Rows as vectors (2D)',
+  'vectorCanvas.mode.cols': 'Columns as vectors (2D)',
+  'vectorCanvas.error.dim': 'Vector canvas needs 2 columns (or 2 rows)',
+  'vectorCanvas.error.type': 'Waiting for a 2D matrix (each vector has 2 components)',
   'conjunction.and': 'and',
 
   'error.cycle': 'Cycle detected',
@@ -101,6 +107,7 @@ export const ru: Messages = {
   'widget.matrixMultiply.title': 'Умножение матриц',
   'widget.scalar.title': 'Скаляр',
   'widget.scalarMultiply.title': 'Умножение на скаляр',
+  'widget.vectorCanvas.title': 'Векторный холст',
   'widget.remove': 'Удалить виджет',
 
   'widget.matrix.port.in': 'вход',
@@ -112,6 +119,7 @@ export const ru: Messages = {
   'widget.scalarMultiply.port.matrix': 'Матрица',
   'widget.scalarMultiply.port.scalar': 'Скаляр',
   'widget.scalarMultiply.port.product': 'Произведение',
+  'widget.vectorCanvas.port.m': 'матрица',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -128,6 +136,10 @@ export const ru: Messages = {
   'multiply.noValue': 'пока нет значения',
   'scalar.error': 'недопустимое точное число',
   'scalarMultiply.waiting': 'ожидание: {ports}',
+  'vectorCanvas.mode.rows': 'Строки как векторы (2D)',
+  'vectorCanvas.mode.cols': 'Столбцы как векторы (2D)',
+  'vectorCanvas.error.dim': 'Нужна матрица 2×n или n×2',
+  'vectorCanvas.error.type': 'Ожидание матрицы размерности 2D (каждый вектор — 2 компоненты)',
   'conjunction.and': 'и',
 
   'error.cycle': 'Обнаружен цикл',

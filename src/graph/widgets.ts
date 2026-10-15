@@ -45,6 +45,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [{ id: 'matrix' }, { id: 'scalar' }],
     outputs: [{ id: 'product' }],
   },
+  vectorCanvas: {
+    kind: 'vectorCanvas',
+    inputs: [{ id: 'm' }],
+    outputs: [],
+  },
 }
 
 export function defaultMatrixData(): MatrixNodeData {
@@ -84,6 +89,8 @@ export function evaluateNode(
       )
     case 'scalar':
       return evaluateScalar(node.data)
+    case 'vectorCanvas':
+      return evaluateVectorCanvas(inputs.m ?? null)
     case 'matrixMultiply': {
       const left = inputs.left ?? null
       const right = inputs.right ?? null
@@ -161,4 +168,16 @@ function evaluateScalar(data: { value: string }): NodeEvaluation {
     const reason = error instanceof Error ? error.message : String(error)
     return { outputs: { s: null }, error: { code: 'cell', row: 1, col: 1, reason } }
   }
+}
+
+function evaluateVectorCanvas(matrix: Matrix<Algebraic> | null): NodeEvaluation {
+  if (!matrix) {
+    return { outputs: {}, error: null }
+  }
+  const is2DColumns = matrix.rows === 2 && matrix.cols >= 1
+  const is2DRows = matrix.cols === 2 && matrix.rows >= 1
+  if (!(is2DColumns || is2DRows)) {
+    return { outputs: {}, error: null }
+  }
+  return { outputs: {}, error: null }
 }
