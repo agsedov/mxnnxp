@@ -31,7 +31,8 @@ npm run lint     # oxlint
 ```
 
 With the dev server running, `npm run smoke` renders the app headlessly
-(Playwright), checks that values flow and slot-dragging connects widgets, and
+(Playwright), checks that values flow, that slot-dragging connects widgets, and
+that dragging a widget redraws continuously without blanking the canvas, and
 writes a screenshot to `/tmp/opencode/smoke.png`.
 
 ## Layout
@@ -39,8 +40,13 @@ writes a screenshot to `/tmp/opencode/smoke.png`.
 ```
 src/math/        Fraction, Matrix — pure, immutable, tested
 src/graph/       widget specs, connection rules, topological evaluation — pure, tested
-src/components/  React Flow canvas + custom widget components
+src/components/  React Flow canvas, widget components, graph ⇄ canvas sync
 docs/            requirements
 ```
 
-The graph engine is UI-agnostic: React Flow only renders it.
+The graph engine is UI-agnostic. React Flow owns the canvas interaction state
+(widget positions, measured sizes, selection) and is the only writer of it; the
+domain graph is projected onto its nodes and edges by
+`src/components/flowSync.ts`, which reuses objects whose data did not change so
+React Flow can keep its cached measurement. Settled positions are written back
+into the domain graph, keeping it serializable (see `docs/requirements.md`).

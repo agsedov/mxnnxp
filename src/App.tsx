@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
   BackgroundVariant,
   Controls,
@@ -15,6 +17,7 @@ import { GraphActionsContext } from './components/GraphActionsContext'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import type { FlowNode } from './components/flowTypes'
+import { reconcileEdges, reconcileNodes } from './components/flowSync'
 import {
   addNode,
   connect,
@@ -50,71 +53,52 @@ export default function App() {
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
 
-  const linkedPorts = useMemo(() => {
-    const inputs = new Set<string>()
-    const outputs = new Set<string>()
-    for (const connection of graph.connections) {
-      inputs.add(`${connection.to.node}:${connection.to.port}`)
-      outputs.add(`${connection.from.node}:${connection.from.port}`)
-    }
-    return { inputs, outputs }
-  }, [graph])
+  // React Flow owns the interaction state (position, measured size, selection)
+  // and is the only writer of `flowNodes` / `flowEdges`. The domain graph is
+  // projected onto them at render time, reusing every object whose data did not
+  // really change — React Flow only keeps its cached node measurement (and with
+  // it all wire endpoints) for objects it receives unchanged.
+  const [flowNodes, setFlowNodes] = useState<FlowNode[]>(() => reconcileNodes([], graph, evaluation))
+  const [flowEdges, setFlowEdges] = useState<Edge[]>(() => reconcileEdges([], graph, evaluation))
+  const nodes = useMemo(() => reconcileNodes(flowNodes, graph, evaluation), [flowNodes, graph, evaluation])
+  const edges = useMemo(() => reconcileEdges(flowEdges, graph, evaluation), [flowEdges, graph, evaluation])
 
-  const nodes = useMemo<FlowNode[]>(
-    () =>
-      graph.nodes.map(node => {
-        const spec = WIDGET_SPECS[node.kind]
-        return {
-          id: node.id,
-          type: node.kind,
-          position: { x: node.x, y: node.y },
-          data: {
-            source: node,
-            evaluation: evaluation.get(node.id) ?? null,
-            connectedInputs: spec.inputs.filter(p => linkedPorts.inputs.has(`${node.id}:${p.id}`)).map(p => p.id),
-            connectedOutputs: spec.outputs.filter(p => linkedPorts.outputs.has(`${node.id}:${p.id}`)).map(p => p.id),
-          },
-        }
-      }),
-    [graph, evaluation, linkedPorts],
-  )
-
-  const edges = useMemo<Edge[]>(
-    () =>
-      graph.connections.map(connection => {
-        const target = graph.nodes.find(node => node.id === connection.to.node)
-        const hasError = target ? Boolean(evaluation.get(target.id)?.error) : false
-        return {
-          id: connection.id,
-          source: connection.from.node,
-          sourceHandle: connection.from.port,
-          target: connection.to.node,
-          targetHandle: connection.to.port,
-          className: hasError ? 'edge-error' : undefined,
-        }
-      }),
+  // Every change React Flow emits is applied verbatim to the interaction state.
+  // Changes are applied on top of the reconciled array so that changes referring
+  // to a just-added node (in particular its measured size) are not dropped.
+  // Removals additionally propagate into the domain graph.
+  const onNodesChange = useCallback(
+    (changes: NodeChange<FlowNode>[]) => {
+      setFlowNodes(current => applyNodeChanges(changes, reconcileNodes(current, graph, evaluation)))
+      const removedIds: string[] = []
+      for (const change of changes) {
+        if (change.type === 'remove') removedIds.push(change.id)
+      }
+      if (removedIds.length > 0) {
+        setGraph(current => removedIds.reduce((acc, id) => removeNode(acc, id), current))
+      }
+    },
     [graph, evaluation],
   )
 
-  // Only removals are applied here. Position and selection changes are deliberately
-  // ignored while dragging: writing them back into the graph on every pointer move
-  // recreated all node objects mid-drag, which made React Flow discard its cached
-  // node measurements and slot bounds (error 015: "node is not initialized" and the
-  // whole graph vanishing). Positions are synced back on drag end instead.
-  const onNodesChange = useCallback((changes: NodeChange<FlowNode>[]) => {
-    setGraph(current =>
-      changes.reduce((acc, change) => (change.type === 'remove' ? removeNode(acc, change.id) : acc), current),
-    )
-  }, [])
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange<Edge>[]) => {
+      setFlowEdges(current => applyEdgeChanges(changes, reconcileEdges(current, graph, evaluation)))
+      const removedIds: string[] = []
+      for (const change of changes) {
+        if (change.type === 'remove') removedIds.push(change.id)
+      }
+      if (removedIds.length > 0) {
+        setGraph(current => removedIds.reduce((acc, id) => disconnect(acc, id), current))
+      }
+    },
+    [graph, evaluation],
+  )
 
+  // React Flow is authoritative for positions while dragging; the settled
+  // position is written back into the domain graph so it stays serializable.
   const onNodeDragStop = useCallback((_event: unknown, node: FlowNode) => {
     setGraph(current => moveNode(current, node.id, node.position.x, node.position.y))
-  }, [])
-
-  const onEdgesChange = useCallback((changes: EdgeChange<Edge>[]) => {
-    setGraph(current =>
-      changes.reduce((acc, change) => (change.type === 'remove' ? disconnect(acc, change.id) : acc), current),
-    )
   }, [])
 
   const onConnect = useCallback(

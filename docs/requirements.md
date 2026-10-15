@@ -94,12 +94,24 @@ Concrete rules:
 |---|---|---|
 | Math | `src/math/` | `Fraction`, `Matrix` — pure, immutable, unit-tested |
 | Graph | `src/graph/` | widget specs, connection rules, topological evaluation — pure, unit-tested |
-| UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components |
+| UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`) |
 
 React Flow provides only the interaction/geometry mechanics (dragging, slot
 hit-testing, wire rendering, pan/zoom). All domain logic — fractions, matrix
 arithmetic, connection validity, evaluation — lives in the dependency-free
 engine and is covered by Vitest.
+
+State ownership follows React Flow's contract:
+
+- React Flow owns the canvas interaction state — widget positions, measured
+  sizes, selection, dragging — and is the only writer of the node/edge arrays,
+  which are updated by applying the changes it emits verbatim.
+- The domain graph stays the source of truth for widget data, connections and
+  values. It is projected onto the canvas with identity-preserving reconciliation
+  (`src/components/flowSync.ts`), so objects whose data did not change are handed
+  back untouched and React Flow can keep its cached measurements.
+- Widget positions re-enter the domain graph when a drag settles
+  (`onNodeDragStop`), so the graph remains serializable.
 
 ## Future
 
