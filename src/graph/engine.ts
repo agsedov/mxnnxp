@@ -1,5 +1,5 @@
 import type { Matrix } from '../math/matrix'
-import { WIDGET_SPECS, defaultMatrixData, evaluateNode } from './widgets'
+import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, evaluateNode } from './widgets'
 import type {
   Connection,
   Evaluation,
@@ -38,11 +38,21 @@ export function moveNode(graph: Graph, id: NodeId, x: number, y: number): Graph 
   return { ...graph, nodes: graph.nodes.map(node => (node.id === id ? { ...node, x, y } : node)) }
 }
 
+/**
+ * Replaces a matrix widget's editable values. Ignored while the widget is driven
+ * by its input slot — it is read-only then and its own values are not in use.
+ */
 export function updateMatrixData(graph: Graph, id: NodeId, data: MatrixNodeData): Graph {
+  if (isDriven(graph, id)) return graph
   return {
     ...graph,
     nodes: graph.nodes.map(node => (node.id === id && node.kind === 'matrix' ? { ...node, data } : node)),
   }
+}
+
+/** Whether a widget's input slot currently carries a connection. */
+function isDriven(graph: Graph, id: NodeId): boolean {
+  return graph.connections.some(connection => connection.to.node === id && connection.to.port === MATRIX_INPUT_PORT)
 }
 
 /**
@@ -129,13 +139,15 @@ export function evaluateGraph(graph: Graph): Evaluation {
   const outputsByNode = new Map<NodeId, Record<string, Matrix | null>>()
   for (const node of ordered) {
     const inputs: Record<string, Matrix | null> = {}
+    const connectedInputs = new Set<string>()
     for (const port of WIDGET_SPECS[node.kind].inputs) {
       inputs[port.id] = null
     }
     for (const connection of incoming.get(node.id) ?? []) {
       inputs[connection.to.port] = outputsByNode.get(connection.from.node)?.[connection.from.port] ?? null
+      connectedInputs.add(connection.to.port)
     }
-    const result = evaluateNode(node, inputs)
+    const result = evaluateNode(node, inputs, connectedInputs)
     outputsByNode.set(node.id, result.outputs)
     evaluation.set(node.id, result)
   }

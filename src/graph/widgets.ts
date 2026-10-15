@@ -15,11 +15,18 @@ export interface WidgetSpec {
   outputs: PortSpec[]
 }
 
+/**
+ * Input slot of the matrix widget. While something is connected here, the widget
+ * is *driven*: it displays — and passes on — the incoming matrix instead of its
+ * own editable values.
+ */
+export const MATRIX_INPUT_PORT = 'in'
+
 export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
   matrix: {
     kind: 'matrix',
     label: 'Matrix',
-    inputs: [],
+    inputs: [{ id: MATRIX_INPUT_PORT, label: 'in' }],
     outputs: [{ id: 'm', label: 'matrix' }],
   },
   matrixMultiply: {
@@ -49,13 +56,22 @@ export function defaultMatrixData(): MatrixNodeData {
  * Pure evaluation of a single widget.
  *
  * `inputs` maps input port ids to upstream matrices (null when the upstream
- * slot has no value). Missing values are not errors — widgets simply produce
- * no output until their inputs arrive.
+ * slot has no value), `connectedInputs` names the slots that actually carry a
+ * connection. Missing values are not errors — widgets simply produce no output
+ * until their inputs arrive.
  */
-export function evaluateNode(node: GraphNode, inputs: Record<string, Matrix | null>): NodeEvaluation {
+export function evaluateNode(
+  node: GraphNode,
+  inputs: Record<string, Matrix | null>,
+  connectedInputs: ReadonlySet<string>,
+): NodeEvaluation {
   switch (node.kind) {
     case 'matrix':
-      return evaluateMatrix(node.data)
+      return evaluateMatrix(
+        node.data,
+        inputs[MATRIX_INPUT_PORT] ?? null,
+        connectedInputs.has(MATRIX_INPUT_PORT),
+      )
     case 'matrixMultiply': {
       const a = inputs.a ?? null
       const b = inputs.b ?? null
@@ -77,7 +93,15 @@ export function evaluateNode(node: GraphNode, inputs: Record<string, Matrix | nu
   }
 }
 
-function evaluateMatrix(data: MatrixNodeData): NodeEvaluation {
+/**
+ * A matrix widget either produces its own values, or — while its input slot is
+ * connected — is driven: it passes the incoming matrix through unchanged and
+ * ignores its own cells (read-only). Without an incoming value it waits.
+ */
+function evaluateMatrix(data: MatrixNodeData, incoming: Matrix | null, driven: boolean): NodeEvaluation {
+  if (driven) {
+    return { outputs: { m: incoming }, error: null }
+  }
   const cells: Fraction[][] = []
   for (let row = 0; row < data.rows; row++) {
     const values: Fraction[] = []

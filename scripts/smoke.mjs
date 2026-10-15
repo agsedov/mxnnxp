@@ -27,46 +27,90 @@ async function sampleEdgeVisibility(durationMs, stepMs = 20) {
   return samples
 }
 
+/** Drags from one slot (or header) to another with the given pointer. */
+async function dragBetween(from, to) {
+  const a = await from.boundingBox()
+  const b = await to.boundingBox()
+  if (!a || !b) return false
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 })
+  await page.mouse.up()
+  return true
+}
+
+/** Clicks the exact middle of an SVG path (where the wire actually is). */
+async function clickPath(path) {
+  const point = await path.evaluate(node => {
+    const svgPath = /** @type {SVGPathElement} */ (node)
+    const p = svgPath.getPointAtLength(svgPath.getTotalLength() / 2)
+    const m = svgPath.getScreenCTM()
+    return { x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f }
+  })
+  await page.mouse.click(point.x, point.y)
+}
+
+const edgeCount = () => page.locator('.react-flow__edge').count()
+const gridText = async node => (await node.locator('.result-grid').textContent()).trim()
+
 await page.goto(BASE, { waitUntil: 'networkidle' })
 await page.waitForSelector('.react-flow__node', { timeout: 15000 })
 await page.waitForSelector('.result-grid', { timeout: 15000 })
 
 const nodeCount = await page.locator('.react-flow__node').count()
-const edgeCount = await page.locator('.react-flow__edge').count()
-const resultBefore = (await page.locator('.result-grid').first().textContent()).trim()
+const initialEdges = await edgeCount()
+const resultBefore = (await gridText(page.locator('.react-flow__node').nth(2))).trim()
 
-// Edit A's top-left cell to "1/2" — result must update to exact fraction math.
-const firstCell = page.locator('.react-flow__node').first().locator('.cell').first()
-await firstCell.fill('1/2')
+// Edit A's top-left cell to "1/2" — the result must follow with exact fractions.
+const matrixA = page.locator('.react-flow__node').nth(0)
+const matrixB = page.locator('.react-flow__node').nth(1)
+await matrixA.locator('.cell').first().fill('1/2')
 await page.waitForTimeout(300)
-const resultAfter = (await page.locator('.result-grid').first().textContent()).trim()
+const resultAfter = (await gridText(page.locator('.react-flow__node').nth(2))).trim()
 
 // Editing a cell must not blank the wires for even one frame.
 const errorsBeforeEdit = errors.length
-await page.locator('.react-flow__node').nth(1).locator('.cell').first().fill('3')
+await matrixB.locator('.cell').first().fill('3')
 const editSamples = await sampleEdgeVisibility(300)
 const editErrors = errors.slice(errorsBeforeEdit)
 
-// Best-effort interaction test: add a widget and connect a slot by dragging.
-let dragOk = false
-try {
-  await page.click('text=+ Multiply')
-  await page.waitForTimeout(200)
-  const source = page.locator('.react-flow__handle-right').first()
-  const target = page.locator('.react-flow__node').last().locator('.react-flow__handle-left').first()
-  const s = await source.boundingBox()
-  const t = await target.boundingBox()
-  if (s && t) {
-    await page.mouse.move(s.x + s.width / 2, s.y + s.height / 2)
-    await page.mouse.down()
-    await page.mouse.move(t.x + t.width / 2, t.y + t.height / 2, { steps: 12 })
-    await page.mouse.up()
-    await page.waitForTimeout(300)
-    dragOk = (await page.locator('.react-flow__edge').count()) >= 3
-  }
-} catch {
-  dragOk = false
+// --- Matrix input slot: connecting it drives the widget (read-only pass-through).
+const errorsBeforeLink = errors.length
+const linked = await dragBetween(
+  matrixA.locator('.react-flow__handle-right').first(),
+  matrixB.locator('.react-flow__handle-left').first(),
+)
+await page.waitForTimeout(300)
+const passThrough = {
+  linked,
+  edgeAdded: (await edgeCount()) === initialEdges + 1,
+  cellsHidden: (await matrixB.locator('.cell').count()) === 0,
+  drivenLabel: (await matrixB.locator('.slot-label').textContent()).trim(),
+  showsUpstream: (await gridText(matrixB)) === '1/2001',
 }
+
+// The driven widget follows its upstream live.
+await matrixA.locator('.cell').first().fill('1/3')
+await page.waitForTimeout(250)
+passThrough.followsUpstream = (await gridText(matrixB)) === '1/3001'
+
+// Removing the wire makes the widget editable again, with its own values intact.
+await clickPath(page.locator('.react-flow__edge-path').last())
+await page.waitForTimeout(250)
+passThrough.editableAgain =
+  (await matrixB.locator('.cell').count()) === 4 && (await matrixB.locator('.cell').first().inputValue()) === '3'
+passThrough.errors = errors.slice(errorsBeforeLink)
+
+// --- Slot dragging onto a freshly added widget connects it.
+const edgesBeforeConnect = await edgeCount()
+await page.click('text=+ Multiply')
+await page.waitForTimeout(300)
+const dragged = await dragBetween(
+  page.locator('.react-flow__handle-right').first(),
+  page.locator('.react-flow__node').last().locator('.react-flow__handle-left').first(),
+)
+await page.waitForTimeout(300)
+const connectOk = dragged && (await edgeCount()) === edgesBeforeConnect + 1
 
 // --- Regression test: dragging a widget header must redraw continuously while
 // the pointer moves and must never blank the graph (React Flow error 015).
@@ -128,15 +172,16 @@ await browser.close()
 
 const report = {
   nodeCount,
-  edgeCount,
+  initialEdges,
   resultBefore,
   resultAfter,
-  dragOk,
+  connectOk,
   cellEdit: {
     samples: editSamples.length,
     allFramesVisible: editSamples.length > 0 && editSamples.every(Boolean),
     errors: editErrors,
   },
+  matrixInput: passThrough,
   nodeDrag: {
     followedMidway,
     followedTarget,
@@ -152,12 +197,19 @@ console.log(JSON.stringify(report, null, 2))
 
 const failed =
   nodeCount < 3 ||
-  edgeCount < 2 ||
+  initialEdges < 2 ||
   resultAfter !== '1/2001' ||
-  !dragOk ||
+  !connectOk ||
   editSamples.length === 0 ||
   !editSamples.every(Boolean) ||
   editErrors.length > 0 ||
+  !passThrough.linked ||
+  !passThrough.edgeAdded ||
+  !passThrough.cellsHidden ||
+  !passThrough.showsUpstream ||
+  !passThrough.followsUpstream ||
+  !passThrough.editableAgain ||
+  passThrough.errors.length > 0 ||
   !followedMidway ||
   !followedTarget ||
   !dragMoved ||

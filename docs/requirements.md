@@ -59,9 +59,15 @@ Concrete rules:
 - Editable `rows × cols` grid of fraction strings; size adjustable from 1×1 to
   6×6 with stepper buttons (existing values are preserved on resize).
 - Default content: the 2×2 identity matrix.
-- One **output slot** (`matrix`) carrying the exact matrix.
-- Invalid cell → cell highlighted red and widget error message; output value
-  is withheld until all cells parse.
+- One **input slot** (`in`) and one **output slot** (`matrix`).
+- **Driven mode**: while the input slot is connected, the widget is read-only.
+  It shows — and passes on — the incoming matrix; its own grid and steppers are
+  replaced by a read-only view, and its own cells are ignored even if invalid.
+  Removing the connection restores the editable grid with the previous values.
+- While the input slot is connected but carries no value, the widget waits
+  (calm state, no error) and produces no output.
+- Invalid cell (while not driven) → cell highlighted red and widget error
+  message; output value is withheld until all cells parse.
 
 ## R4 — Matrix multiply widget
 

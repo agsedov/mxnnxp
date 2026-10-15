@@ -3,10 +3,12 @@ import {
   addNode,
   connect,
   createGraph,
+  disconnect,
   evaluateGraph,
   removeNode,
+  updateMatrixData,
 } from './engine'
-import { defaultMatrixData } from './widgets'
+import { MATRIX_INPUT_PORT, defaultMatrixData } from './widgets'
 import type { Graph, MatrixNodeData } from './types'
 
 function withCells(cells: string[][]): MatrixNodeData {
@@ -148,5 +150,81 @@ describe('evaluateGraph', () => {
     const evaluation = evaluateGraph(graph)
     expect(evaluation.get(first.id)?.error).toBe('Cycle detected')
     expect(evaluation.get(second.id)?.error).toBe('Cycle detected')
+  })
+})
+
+describe('matrix widget input slot', () => {
+  /** An upstream 2×2 matrix feeding a 1×1 matrix through its input slot. */
+  function drivenScene() {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'matrix', 0, 200)
+    const [upstream, driven] = graph.nodes
+    graph = setMatrixCells(graph, upstream.id, [['1/2', '0'], ['0', '1']])
+    graph = setMatrixCells(graph, driven.id, [['9']])
+    graph = connect(graph, { node: upstream.id, port: 'm' }, { node: driven.id, port: MATRIX_INPUT_PORT })
+    return { graph, upstream, driven }
+  }
+
+  it('passes the incoming matrix through instead of its own cells', () => {
+    const { graph, driven } = drivenScene()
+    const result = evaluateGraph(graph).get(driven.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.m?.toString()).toBe('[1/2, 0] [0, 1]')
+  })
+
+  it('takes the shape of the incoming matrix', () => {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'matrix', 0, 200)
+    const [upstream, driven] = graph.nodes
+    graph = setMatrixCells(graph, upstream.id, [['1', '2', '3']])
+    graph = connect(graph, { node: upstream.id, port: 'm' }, { node: driven.id, port: MATRIX_INPUT_PORT })
+
+    const matrix = evaluateGraph(graph).get(driven.id)?.outputs.m
+    expect(matrix?.rows).toBe(1)
+    expect(matrix?.cols).toBe(3)
+  })
+
+  it('ignores its own cells, even invalid ones, while driven', () => {
+    const { graph, driven } = drivenScene()
+    const broken = setMatrixCells(graph, driven.id, [['nonsense']])
+    const result = evaluateGraph(broken).get(driven.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.m?.toString()).toBe('[1/2, 0] [0, 1]')
+  })
+
+  it('waits quietly while the upstream slot has no value', () => {
+    const { graph, upstream, driven } = drivenScene()
+    const evaluation = evaluateGraph(setMatrixCells(graph, upstream.id, [['oops']]))
+
+    expect(evaluation.get(upstream.id)?.error).toContain('not a valid fraction')
+    expect(evaluation.get(driven.id)?.error).toBeNull()
+    expect(evaluation.get(driven.id)?.outputs.m).toBeNull()
+  })
+
+  it('feeds a multiply widget with the incoming matrix', () => {
+    // upstream (2×2) → driven (own cells are a 1×1 "9") → product = upstream × identity.
+    let graph = drivenScene().graph
+    graph = addNode(graph, 'matrix', 0, 400)
+    graph = addNode(graph, 'matrixMultiply', 400, 100)
+    const [, driven, factor, multiply] = graph.nodes
+    graph = setMatrixCells(graph, factor.id, [['1', '0'], ['0', '1']])
+    graph = connect(graph, { node: driven.id, port: 'm' }, { node: multiply.id, port: 'a' })
+    graph = connect(graph, { node: factor.id, port: 'm' }, { node: multiply.id, port: 'b' })
+
+    // Passing its own 1×1 cell along would be a dimension mismatch instead.
+    expect(evaluateGraph(graph).get(multiply.id)?.outputs.product?.toString()).toBe('[1/2, 0] [0, 1]')
+  })
+
+  it('is read-only while driven and editable again once the wire is removed', () => {
+    const { graph, driven } = drivenScene()
+    const attempt = updateMatrixData(graph, driven.id, { rows: 1, cols: 1, cells: [['42']] })
+    expect(attempt).toBe(graph)
+
+    const freed = disconnect(graph, graph.connections[0].id)
+    const updated = updateMatrixData(freed, driven.id, { rows: 1, cols: 1, cells: [['42']] })
+    const node = updated.nodes.find(candidate => candidate.id === driven.id)
+    expect(node?.kind === 'matrix' ? node.data.cells[0][0] : null).toBe('42')
   })
 })

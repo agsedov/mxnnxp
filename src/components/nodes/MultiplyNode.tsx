@@ -2,8 +2,8 @@ import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { useContext } from 'react'
 import { GraphActionsContext } from '../GraphActionsContext'
+import { MatrixView } from '../MatrixView'
 import type { FlowNode } from '../flowTypes'
-import type { Matrix } from '../../math/matrix'
 
 /**
  * Y offsets of the slots, aligned with the body rows:
@@ -64,7 +64,7 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
           <span className="slot-label">B</span>
         </div>
         <div className="status-row">{status}</div>
-        {product && <ResultGrid matrix={product} />}
+        {product && <MatrixView matrix={product} />}
       </div>
       <Handle
         type="source"
@@ -73,20 +73,6 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
         style={{ top: SLOT_A_Y }}
         className={connectedOutputs.includes('product') ? 'slot-connected' : undefined}
       />
-    </div>
-  )
-}
-
-function ResultGrid({ matrix }: { matrix: Matrix }) {
-  return (
-    <div className="result-grid" style={{ gridTemplateColumns: `repeat(${matrix.cols}, minmax(46px, auto))` }}>
-      {matrix.data.map((row, rowIndex) =>
-        row.map((value, colIndex) => (
-          <div key={`${rowIndex}:${colIndex}`} className="result-cell">
-            {value.toString()}
-          </div>
-        )),
-      )}
     </div>
   )
 }
