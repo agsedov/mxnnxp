@@ -45,14 +45,71 @@ try {
   dragOk = false
 }
 
-const finalNodeCount = await page.locator('.react-flow__node').count()
+// --- Regression test: dragging a widget header must not blank the graph (error 015).
+const errorsBeforeDrag = errors.length
+const widget = page.locator('.react-flow__node').first()
+const header = widget.locator('.widget-header')
+const before = await widget.boundingBox()
+const hb = await header.boundingBox()
+await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
+await page.mouse.down()
+await page.mouse.move(hb.x + hb.width / 2 + 150, hb.y + hb.height / 2 + 90, { steps: 15 })
+
+// Still holding the button: every node and wire must be visible right now.
+const midNodeBoxes = await page.locator('.react-flow__node').evaluateAll(els =>
+  els.map(el => {
+    const r = el.getBoundingClientRect()
+    return { w: r.width, h: r.height }
+  }),
+)
+const midEdgeBoxes = await page.locator('.react-flow__edge-path').evaluateAll(els =>
+  els.map(el => {
+    const r = el.getBoundingClientRect()
+    return { w: r.width, h: r.height }
+  }),
+)
+await page.mouse.up()
+await page.waitForTimeout(500)
+
+const after = await widget.boundingBox()
+const postEdgeBoxes = await page.locator('.react-flow__edge-path').evaluateAll(els =>
+  els.map(el => {
+    const r = el.getBoundingClientRect()
+    return { w: r.width, h: r.height }
+  }),
+)
+const dragErrors = errors
+  .slice(errorsBeforeDrag)
+  .filter(e => e.includes('015') || e.includes('not initialized'))
+
+const dragMoved = before && after ? after.x - before.x > 100 : false
+const midNodesVisible = midNodeBoxes.length > 0 && midNodeBoxes.every(b => b.w > 0 && b.h > 0)
+const midEdgesVisible = midEdgeBoxes.length >= 2 && midEdgeBoxes.every(b => b.w > 0 && b.h > 0)
+const postEdgesVisible = postEdgeBoxes.length >= 2 && postEdgeBoxes.every(b => b.w > 0 && b.h > 0)
+
 await page.screenshot({ path: '/tmp/opencode/smoke.png' })
 await browser.close()
 
-console.log(
-  JSON.stringify(
-    { nodeCount, edgeCount, resultBefore, resultAfter, dragOk, finalNodeCount, errors },
-    null,
-    2,
-  ),
-)
+const report = {
+  nodeCount,
+  edgeCount,
+  resultBefore,
+  resultAfter,
+  dragOk,
+  nodeDrag: { dragMoved, midNodesVisible, midEdgesVisible, postEdgesVisible, dragErrors },
+  errors,
+}
+console.log(JSON.stringify(report, null, 2))
+
+const failed =
+  nodeCount < 3 ||
+  edgeCount < 2 ||
+  resultAfter !== '1/2001' ||
+  !dragOk ||
+  !dragMoved ||
+  !midNodesVisible ||
+  !midEdgesVisible ||
+  !postEdgesVisible ||
+  dragErrors.length > 0 ||
+  errors.length > 0
+process.exit(failed ? 1 : 0)

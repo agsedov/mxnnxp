@@ -47,7 +47,6 @@ function createInitialGraph(): Graph {
 
 export default function App() {
   const [graph, setGraph] = useState<Graph>(createInitialGraph)
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<NodeId>>(() => new Set())
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
 
@@ -69,7 +68,6 @@ export default function App() {
           id: node.id,
           type: node.kind,
           position: { x: node.x, y: node.y },
-          selected: selectedIds.has(node.id),
           data: {
             source: node,
             evaluation: evaluation.get(node.id) ?? null,
@@ -78,7 +76,7 @@ export default function App() {
           },
         }
       }),
-    [graph, evaluation, linkedPorts, selectedIds],
+    [graph, evaluation, linkedPorts],
   )
 
   const edges = useMemo<Edge[]>(
@@ -98,34 +96,19 @@ export default function App() {
     [graph, evaluation],
   )
 
+  // Only removals are applied here. Position and selection changes are deliberately
+  // ignored while dragging: writing them back into the graph on every pointer move
+  // recreated all node objects mid-drag, which made React Flow discard its cached
+  // node measurements and slot bounds (error 015: "node is not initialized" and the
+  // whole graph vanishing). Positions are synced back on drag end instead.
   const onNodesChange = useCallback((changes: NodeChange<FlowNode>[]) => {
-    setGraph(current => {
-      let next = current
-      for (const change of changes) {
-        if (change.type === 'position' && change.position) {
-          next = moveNode(next, change.id, change.position.x, change.position.y)
-        } else if (change.type === 'remove') {
-          next = removeNode(next, change.id)
-        }
-      }
-      return next
-    })
-    setSelectedIds(current => {
-      let next = current
-      for (const change of changes) {
-        if (change.type === 'select') {
-          const updated = new Set(next)
-          if (change.selected) updated.add(change.id)
-          else updated.delete(change.id)
-          next = updated
-        } else if (change.type === 'remove') {
-          const updated = new Set(next)
-          updated.delete(change.id)
-          next = updated
-        }
-      }
-      return next
-    })
+    setGraph(current =>
+      changes.reduce((acc, change) => (change.type === 'remove' ? removeNode(acc, change.id) : acc), current),
+    )
+  }, [])
+
+  const onNodeDragStop = useCallback((_event: unknown, node: FlowNode) => {
+    setGraph(current => moveNode(current, node.id, node.position.x, node.position.y))
   }, [])
 
   const onEdgesChange = useCallback((changes: EdgeChange<Edge>[]) => {
@@ -175,7 +158,6 @@ export default function App() {
   }, [])
 
   const reset = useCallback(() => {
-    setSelectedIds(new Set())
     setGraph(createInitialGraph())
   }, [])
 
@@ -203,6 +185,7 @@ export default function App() {
             edges={edges}
             nodeTypes={NODE_TYPES}
             onNodesChange={onNodesChange}
+            onNodeDragStop={onNodeDragStop}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgeClick={(_, edge) => setGraph(current => disconnect(current, edge.id))}
