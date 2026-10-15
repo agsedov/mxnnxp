@@ -6,16 +6,20 @@ the graph.
 
 ## What it does
 
-- **Matrix widget** — edit an `n×m` grid of fractions (1×1 … 6×6), one input
+- **Matrix widget** — edit an `n×m` grid of exact numbers (1×1 … 6×6), one input
   slot and one output slot. Connect something to its input and it becomes a
   read-only display (and relay) of that incoming matrix, typeset with TeX
   (KaTeX).
 - **Matrix multiply widget** — two input slots (Left, Right), one output; shows
   the result shape and dimension errors. Connect the output to a matrix widget
   to display the product.
-- **Exact numbers** — every value is a `Fraction` (Python `fractions.Fraction`
-  style): normalized, immutable, and computed without floating point.
-  See [docs/requirements.md](docs/requirements.md).
+- **Exact numbers** — all values are exact, never floating point. The math layer
+  implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
+  `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as
+  `sqrt(2)`, `(1+sqrt(5))/2`, and complex `1 - i`), with an exact input parser
+  (`sqrt(2)/2`, `2i`, `8^(1/3)`, …) and exact ordering. The widget value path
+  still uses the earlier number-backed `Fraction` and is being migrated onto the
+  tower. See [docs/requirements.md](docs/requirements.md).
 
 ## Stack
 
@@ -45,7 +49,7 @@ continuously without blanking the canvas, and writes a screenshot to
 ## Layout
 
 ```
-src/math/        Fraction, Matrix — pure, immutable, tested (incl. toLatex)
+src/math/        Fraction, Matrix, and the exact/ number tower — pure, immutable, tested
 src/graph/       widget specs, connection rules, topological evaluation — pure, tested
 src/components/  React Flow canvas, widget components, TeX rendering, graph ⇄ canvas sync
 docs/            requirements (incl. the TeX update-cycle policy)
@@ -62,10 +66,3 @@ TeX follows the same split: `toLatex()` is math, KaTeX output is UI. If the TeX
 update cycle ever misbehaves during development, freeze it
 (`FREEZE_TEX_UPDATES` in `src/components/Tex.tsx`) and deal with it later — see
 the TeX policy in [docs/requirements.md](docs/requirements.md).
-
-The graph engine is UI-agnostic. React Flow owns the canvas interaction state
-(widget positions, measured sizes, selection) and is the only writer of it; the
-domain graph is projected onto its nodes and edges by
-`src/components/flowSync.ts`, which reuses objects whose data did not change so
-React Flow can keep its cached measurement. Settled positions are written back
-into the domain graph, keeping it serializable (see `docs/requirements.md`).

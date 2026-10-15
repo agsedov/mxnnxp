@@ -31,33 +31,62 @@ Start set: **Matrix** widget and **Matrix multiply** widget.
 
 ## R2 — Numbers (core requirement)
 
-> **All numeric values in the system are of the exact rational `Fraction`
-> type, modeled after Python's `fractions.Fraction`.**
+> **All numeric values in the system are exact numbers — never IEEE floating
+> point.** Values live in an exact number tower (`src/math/exact/`) built on
+> `BigInt`.
+
+The tower has two levels and one interface:
+
+- **`Rational`** — exact rationals: a reduced `numerator/denominator` pair with a
+  positive denominator and the sign in the numerator. Parts are `BigInt`s, so
+  there is no 2^53 ceiling and no silent precision loss.
+- **`Algebraic`** — exact complex algebraic numbers in a multiquadratic field
+  `Q(√d₁, …, √d_k)` together with `i`. A value is stored canonically as a pair of
+  maps (real and imaginary) from a positive square-free radicand to a rational
+  coefficient, so `sqrt(2)`, `(1+√5)/2`, `2i` and `1 − √3` are exact and
+  equality is structural.
+- Both implement the `Scalar<T>` interface (field operations, `isZero`,
+  `equals`, `sign`, `toString`, `toLatex`), which is what field-generic matrix
+  algorithms (`rref`/`det`/`rank`/`solve`) will be written against.
 
 Concrete rules:
 
-- A `Fraction` is a pair of safe integers `numerator/denominator` kept in
-  **canonical form**: denominator > 0 (the sign lives in the numerator) and the
-  pair fully reduced (gcd = 1).
-- **All arithmetic is exact.** IEEE floating point must never be used to
-  compute values in the math layer — `0.1 + 0.2` is exactly `3/10`, and
-  matrix products like `1/3 × 1/3` are exactly `1/9`.
-- Accepted input syntax: integers (`42`, `-7`), ratios (`3/4`, `6/8` is
-  normalized to `3/4`), and decimals (`0.25`, `-.5`) — decimals are converted
-  to exact ratios, not floats.
-- Invalid text in a cell is a **per-cell error** naming the row and column;
-  the widget then produces no value.
-- Display format: `n` when the denominator is 1, otherwise `n/d` (e.g.
-  `-3/4`). Results on widgets are shown in this exact form.
-- Range: safe-integer bounds (`|value| ≤ 2^53`). Operations that would leave
-  that range throw; a future BigInt-backed variant is listed under Future.
-- The `Fraction` type is the *only* numeric type exposed by widgets, slots,
-  and evaluation results. Matrix entries are always `Fraction`s.
+- **All arithmetic is exact.** `0.1 + 0.2` is exactly `3/10`, matrix products
+  like `1/3 × 1/3` are exactly `1/9`, and
+  `(1+√5)/2 · (1−√5)/2 = −1`.
+- Values are normalized to a canonical form, which makes equality structural and
+  rationalizes automatically: `sqrt(8) → 2·sqrt(2)`, `sqrt(2)·sqrt(3) → sqrt(6)`,
+  `sqrt(2)·sqrt(2) → 2`, `1/sqrt(2) → sqrt(2)/2`.
+- Ordering (`sign`, `compare`) is exact and only defined for real values; it is
+  decided by rational interval arithmetic that refines until zero is excluded.
+  Complex values have no ordering and report an error instead.
+- Operations that would leave the supported tower (`sqrt(sqrt(2))`, an
+  irrational exponent, a non-perfect higher root) are **hard errors**, never a
+  float approximation.
+- Accepted input syntax (`parseExact`): rationals (`42`, `-7`, `3/4`, `0.25` —
+  decimals are converted to exact ratios, not floats), radicals and roots
+  (`sqrt(2)`, `sqrt 2`, `√2`, `\sqrt{2}`, `2sqrt(2)`, `2^0.5`, `8^(1/3)`,
+  `\frac{1}{2}`) and the imaginary unit (`i`, `2i`, `1 - i`). Implicit
+  multiplication is accepted only before a name or `(`, so `1 2` is an error
+  rather than `2`.
+- Invalid text in a cell is a **per-cell error** naming the row and column; the
+  widget then produces no value.
+- Display format: `Rational.toString()` for rationals (`n`, or `n/d` such as
+  `-3/4`); `Algebraic.toString()` is a canonical, re-parseable plain form
+  (`sqrt(2)/2`, `1 + sqrt(2)`, `2*i`). The round trip
+  `parseExact(x.toString()) === x` holds.
+- LaTeX is produced by the math layer (`Rational.toLatex`, `Algebraic.toLatex`,
+  `Matrix.toLatex`); TeX is display only and never parses or computes (see R6).
+
+**Status.** The tower is implemented and unit-tested in `src/math/exact/`. The
+widget value path (cells, slots, evaluation results) still uses the earlier
+number-backed `Fraction`; migrating it to `Rational`/`Algebraic` via
+`parseExact`, and making `Matrix` generic over `Scalar`, is tracked under Future.
 
 ## R3 — Matrix widget
 
-- Editable `rows × cols` grid of fraction strings; size adjustable from 1×1 to
-  6×6 with stepper buttons (existing values are preserved on resize).
+- Editable `rows × cols` grid of exact-number strings (see R2); size adjustable
+  from 1×1 to 6×6 with stepper buttons (existing values are preserved on resize).
 - Default content: the 2×2 identity matrix.
 - One **input slot** (`in`) and one **output slot** (`matrix`).
 - **Driven mode**: while the input slot is connected, the widget is read-only.
@@ -66,8 +95,8 @@ Concrete rules:
   Removing the connection restores the editable grid with the previous values.
 - While the input slot is connected but carries no value, the widget waits
   (calm state, no error) and produces no output.
-- Driven display is typeset with TeX (see R6): a matrix of fractions in round
-  parentheses.
+- Driven display is typeset with TeX (see R6): a matrix of exact numbers in
+  round parentheses.
 - Invalid cell (while not driven) → cell highlighted red and widget error
   message; output value is withheld until all cells parse.
 
@@ -75,8 +104,8 @@ Concrete rules:
 
 - Two **input slots**: `Left` and `Right` (the left factor and the right factor).
   One **output slot**: the product.
-- Computes the exact matrix product over `Fraction`s whenever both inputs
-  carry a value.
+- Computes the exact matrix product over exact numbers (see R2) whenever both
+  inputs carry a value.
 - Unconnected / upstream-unavailable inputs → widget shows a calm
   "waiting for …" state (not an error).
 - Dimension mismatch (`left.cols ≠ right.rows`) → error message with both shapes
@@ -100,12 +129,12 @@ Concrete rules:
 
 - Values a widget did not produce itself (a matrix driven by its input) are
   typeset with TeX instead of being drawn as plain DOM cells: a `pmatrix` —
-  exact fractions in round parentheses — with `\frac{1}{2}` for fractions, bare
-  integers, and the sign written in front (`-\frac{3}{4}`), rendered by
-  [KaTeX](https://katex.org).
-- LaTeX is produced by the math layer (`Fraction.toLatex`, `Matrix.toLatex`) and
-  is unit-tested there; `src/components/Tex.tsx` only turns that string into
-  HTML.
+  exact numbers in round parentheses — with `\frac{1}{2}` for fractions,
+  `\sqrt{2}` for radicals, bare integers, and the sign written in front
+  (`-\frac{3}{4}`), rendered by [KaTeX](https://katex.org).
+- LaTeX is produced by the math layer (`Rational.toLatex`, `Algebraic.toLatex`,
+  `Matrix.toLatex`) and is unit-tested there; `src/components/Tex.tsx` only turns
+  that string into HTML.
 - TeX is a **display** format only: it never parses or computes values, and the
   plain `toString()` form stays authoritative (tests, errors, debug).
 - KaTeX is used because it is *synchronous* — `renderToString` returns finished
@@ -135,12 +164,12 @@ unaffected.
 
 | Layer | Where | Notes |
 |---|---|---|
-| Math | `src/math/` | `Fraction`, `Matrix` — pure, immutable, unit-tested (incl. LaTeX) |
+| Math | `src/math/` | exact numbers: `Fraction`, `Matrix`, and the `src/math/exact/` tower (`Rational`, `Algebraic`, `parseExact`) — pure, immutable, unit-tested (incl. LaTeX) |
 | Graph | `src/graph/` | widget specs, connection rules, topological evaluation — pure, unit-tested |
 | UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`), TeX rendering (`Tex.tsx`) |
 
 React Flow provides only the interaction/geometry mechanics (dragging, slot
-hit-testing, wire rendering, pan/zoom). All domain logic — fractions, matrix
+hit-testing, wire rendering, pan/zoom). All domain logic — exact numbers, matrix
 arithmetic, connection validity, evaluation — lives in the dependency-free
 engine and is covered by Vitest.
 
@@ -158,7 +187,12 @@ State ownership follows React Flow's contract:
 
 ## Future
 
-- More widgets: transpose, inverse, determinant, scalar multiply, sum.
+- More widgets: transpose, inverse, determinant, rank, solve, scalar multiply,
+  sum.
+- Migrate the widget value path from `Fraction` to the exact tower
+  (`Rational`/`Algebraic` via `parseExact`) and make `Matrix` generic over
+  `Scalar`, so field-generic algorithms work over either.
+- Characteristic polynomial and spectral/Jordan decomposition, with an explicit
+  "not representable in the supported exact tower" state rather than a float.
 - Serialization of graphs (localStorage / shareable URLs).
-- BigInt-backed fractions for values beyond 2^53.
 - Pan/zoom-aware port markers, keyboard graph navigation.
