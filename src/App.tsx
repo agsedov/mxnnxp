@@ -171,6 +171,9 @@ export default function App() {
           <button className="btn" onClick={() => addWidget('scalarMultiply')}>
             {t('toolbar.addScalarMultiply')}
           </button>
+          <button className="btn" onClick={() => addWidget('vectorCanvas')}>
+            {t('toolbar.addVectorCanvas')}
+          </button>
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}
           </button>

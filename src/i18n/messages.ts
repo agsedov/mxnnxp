@@ -40,6 +40,7 @@ export const en = {
   'toolbar.addMultiply': '+ Multiply',
   'toolbar.addScalar': '+ Scalar',
   'toolbar.addScalarMultiply': '+ Scalar Multiply',
+  'toolbar.addVectorCanvas': '+ Vector Canvas',
   'toolbar.reset': 'Reset',
   'toolbar.hint':
     'drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove',
@@ -99,6 +100,7 @@ export const ru: Messages = {
   'toolbar.addMultiply': '+ Умножение',
   'toolbar.addScalar': '+ Скаляр',
   'toolbar.addScalarMultiply': '+ Умножение на скаляр',
+  'toolbar.addVectorCanvas': '+ Векторный холст',
   'toolbar.reset': 'Сброс',
   'toolbar.hint':
     'перетаскивайте виджеты, чтобы двигать · перетащите слот на другой, чтобы соединить · щёлкните провод или нажмите ⌫, чтобы удалить',
