@@ -391,6 +391,18 @@ body {
   color: var(--error);
 }
 
+/* ---------- scalar editor ---------- */
+
+.scalar-editor {
+  display: flex;
+  align-items: center;
+  height: 28px;
+}
+
+.scalar-editor .cell {
+  width: 92px;
+}
+
 /* ---------- TeX (read-only values) ---------- */
 
 .tex {

@@ -17,6 +17,8 @@ import { GraphActionsContext } from './components/GraphActionsContext'
 import { LanguageSwitch } from './components/LanguageSwitch'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
+import { ScalarNode } from './components/nodes/ScalarNode'
+import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
 import type { FlowNode } from './components/flowTypes'
 import { reconcileEdges, reconcileNodes } from './components/flowSync'
 import { useI18n } from './i18n/context'
@@ -29,6 +31,7 @@ import {
   moveNode,
   removeNode,
   updateMatrixData,
+  updateScalarData,
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
 import type { Graph, MatrixNodeData, NodeId, WidgetKind } from './graph/types'
@@ -36,6 +39,8 @@ import type { Graph, MatrixNodeData, NodeId, WidgetKind } from './graph/types'
 const NODE_TYPES = {
   matrix: MatrixNode,
   matrixMultiply: MultiplyNode,
+  scalar: ScalarNode,
+  scalarMultiply: ScalarMultiplyNode,
 }
 
 /** Demo scene: A × B with both factors editable. */
@@ -132,6 +137,7 @@ export default function App() {
   const graphActions = useMemo(
     () => ({
       updateMatrix: (id: NodeId, data: MatrixNodeData) => setGraph(current => updateMatrixData(current, id, data)),
+      updateScalar: (id: NodeId, value: string) => setGraph(current => updateScalarData(current, id, value)),
       removeNode: (id: NodeId) => setGraph(current => removeNode(current, id)),
     }),
     [],
@@ -158,6 +164,12 @@ export default function App() {
           </button>
           <button className="btn" onClick={() => addWidget('matrixMultiply')}>
             {t('toolbar.addMultiply')}
+          </button>
+          <button className="btn" onClick={() => addWidget('scalar')}>
+            {t('toolbar.addScalar')}
+          </button>
+          <button className="btn" onClick={() => addWidget('scalarMultiply')}>
+            {t('toolbar.addScalarMultiply')}
           </button>
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}

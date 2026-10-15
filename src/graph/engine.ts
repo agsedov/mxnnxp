@@ -1,6 +1,6 @@
 import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
-import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, evaluateNode } from './widgets'
+import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, evaluateNode } from './widgets'
 import type {
   Connection,
   Evaluation,
@@ -23,7 +23,11 @@ export function createGraph(): Graph {
 export function addNode(graph: Graph, kind: WidgetKind, x: number, y: number): Graph {
   const id = newId()
   const node: GraphNode =
-    kind === 'matrix' ? { id, kind, x, y, data: defaultMatrixData() } : { id, kind, x, y }
+    kind === 'matrix'
+      ? { id, kind, x, y, data: defaultMatrixData() }
+      : kind === 'scalar'
+        ? { id, kind, x, y, data: defaultScalarData() }
+        : { id, kind, x, y }
   return { nodes: [...graph.nodes, node], connections: graph.connections }
 }
 
@@ -48,6 +52,13 @@ export function updateMatrixData(graph: Graph, id: NodeId, data: MatrixNodeData)
   return {
     ...graph,
     nodes: graph.nodes.map(node => (node.id === id && node.kind === 'matrix' ? { ...node, data } : node)),
+  }
+}
+
+export function updateScalarData(graph: Graph, id: NodeId, value: string): Graph {
+  return {
+    ...graph,
+    nodes: graph.nodes.map(node => (node.id === id && node.kind === 'scalar' ? { ...node, data: { value } } : node)),
   }
 }
 

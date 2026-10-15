@@ -2,7 +2,7 @@ import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 
 export type NodeId = string
-export type WidgetKind = 'matrix' | 'matrixMultiply'
+export type WidgetKind = 'matrix' | 'matrixMultiply' | 'scalar' | 'scalarMultiply'
 export type PortDirection = 'input' | 'output'
 
 /** A reference to a slot ("port") on a widget. */
@@ -33,7 +33,22 @@ export interface MatrixMultiplyWidget {
   y: number
 }
 
-export type GraphNode = MatrixWidget | MatrixMultiplyWidget
+export interface ScalarWidget {
+  id: NodeId
+  kind: 'scalar'
+  x: number
+  y: number
+  data: { value: string }
+}
+
+export interface ScalarMultiplyWidget {
+  id: NodeId
+  kind: 'scalarMultiply'
+  x: number
+  y: number
+}
+
+export type GraphNode = MatrixWidget | MatrixMultiplyWidget | ScalarWidget | ScalarMultiplyWidget
 
 export interface Connection {
   id: string

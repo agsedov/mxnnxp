@@ -9,6 +9,8 @@ import type { MessageKey, TFunction } from './messages'
 export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   matrix: 'widget.matrix.title',
   matrixMultiply: 'widget.matrixMultiply.title',
+  scalar: 'widget.scalar.title',
+  scalarMultiply: 'widget.scalarMultiply.title',
 }
 
 const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
@@ -20,6 +22,14 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
     left: 'widget.matrixMultiply.port.left',
     right: 'widget.matrixMultiply.port.right',
     product: 'widget.matrixMultiply.port.product',
+  },
+  scalar: {
+    s: 'widget.scalar.port.s',
+  },
+  scalarMultiply: {
+    matrix: 'widget.scalarMultiply.port.matrix',
+    scalar: 'widget.scalarMultiply.port.scalar',
+    product: 'widget.scalarMultiply.port.product',
   },
 }
 

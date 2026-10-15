@@ -38,12 +38,16 @@ export const en = {
 
   'toolbar.addMatrix': '+ Matrix',
   'toolbar.addMultiply': '+ Multiply',
+  'toolbar.addScalar': '+ Scalar',
+  'toolbar.addScalarMultiply': '+ Scalar Multiply',
   'toolbar.reset': 'Reset',
   'toolbar.hint':
     'drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove',
 
   'widget.matrix.title': 'Matrix',
   'widget.matrixMultiply.title': 'Matrix multiply',
+  'widget.scalar.title': 'Scalar',
+  'widget.scalarMultiply.title': 'Scalar multiply',
   'widget.remove': 'Remove widget',
 
   'widget.matrix.port.in': 'in',
@@ -51,6 +55,10 @@ export const en = {
   'widget.matrixMultiply.port.left': 'Left',
   'widget.matrixMultiply.port.right': 'Right',
   'widget.matrixMultiply.port.product': 'Left × Right',
+  'widget.scalar.port.s': 'scalar',
+  'widget.scalarMultiply.port.matrix': 'Matrix',
+  'widget.scalarMultiply.port.scalar': 'Scalar',
+  'widget.scalarMultiply.port.product': 'Product',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -65,6 +73,8 @@ export const en = {
   'multiply.result': '{rows}×{cols} result',
   'multiply.waiting': 'waiting for {ports}',
   'multiply.noValue': 'no value yet',
+  'scalar.error': 'not a valid exact number',
+  'scalarMultiply.waiting': 'waiting for {ports}',
   'conjunction.and': 'and',
 
   'error.cycle': 'Cycle detected',
@@ -81,12 +91,16 @@ export const ru: Messages = {
 
   'toolbar.addMatrix': '+ Матрица',
   'toolbar.addMultiply': '+ Умножение',
+  'toolbar.addScalar': '+ Скаляр',
+  'toolbar.addScalarMultiply': '+ Умножение на скаляр',
   'toolbar.reset': 'Сброс',
   'toolbar.hint':
     'перетаскивайте виджеты, чтобы двигать · перетащите слот на другой, чтобы соединить · щёлкните провод или нажмите ⌫, чтобы удалить',
 
   'widget.matrix.title': 'Матрица',
   'widget.matrixMultiply.title': 'Умножение матриц',
+  'widget.scalar.title': 'Скаляр',
+  'widget.scalarMultiply.title': 'Умножение на скаляр',
   'widget.remove': 'Удалить виджет',
 
   'widget.matrix.port.in': 'вход',
@@ -94,6 +108,10 @@ export const ru: Messages = {
   'widget.matrixMultiply.port.left': 'Левая',
   'widget.matrixMultiply.port.right': 'Правая',
   'widget.matrixMultiply.port.product': 'Левая × Правая',
+  'widget.scalar.port.s': 'скаляр',
+  'widget.scalarMultiply.port.matrix': 'Матрица',
+  'widget.scalarMultiply.port.scalar': 'Скаляр',
+  'widget.scalarMultiply.port.product': 'Произведение',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -108,6 +126,8 @@ export const ru: Messages = {
   'multiply.result': 'результат {rows}×{cols}',
   'multiply.waiting': 'ожидание: {ports}',
   'multiply.noValue': 'пока нет значения',
+  'scalar.error': 'недопустимое точное число',
+  'scalarMultiply.waiting': 'ожидание: {ports}',
   'conjunction.and': 'и',
 
   'error.cycle': 'Обнаружен цикл',

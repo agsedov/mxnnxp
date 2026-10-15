@@ -35,9 +35,18 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [{ id: 'left' }, { id: 'right' }],
     outputs: [{ id: 'product' }],
   },
+  scalar: {
+    kind: 'scalar',
+    inputs: [],
+    outputs: [{ id: 's' }],
+  },
+  scalarMultiply: {
+    kind: 'scalarMultiply',
+    inputs: [{ id: 'matrix' }, { id: 'scalar' }],
+    outputs: [{ id: 'product' }],
+  },
 }
 
-/** Default content for a new matrix widget: the 2×2 identity. */
 export function defaultMatrixData(): MatrixNodeData {
   return {
     rows: 2,
@@ -47,6 +56,10 @@ export function defaultMatrixData(): MatrixNodeData {
       ['0', '1'],
     ],
   }
+}
+
+export function defaultScalarData(): { value: string } {
+  return { value: '1' }
 }
 
 /**
@@ -69,6 +82,8 @@ export function evaluateNode(
         inputs[MATRIX_INPUT_PORT] ?? null,
         connectedInputs.has(MATRIX_INPUT_PORT),
       )
+    case 'scalar':
+      return evaluateScalar(node.data)
     case 'matrixMultiply': {
       const left = inputs.left ?? null
       const right = inputs.right ?? null
@@ -92,6 +107,18 @@ export function evaluateNode(
         }
         throw error
       }
+    }
+    case 'scalarMultiply': {
+      const matrix = inputs.matrix ?? null
+      const scalar = inputs.scalar ?? null
+      if (!matrix || !scalar) {
+        return { outputs: { product: null }, error: null }
+      }
+      const s = scalar.get(0, 0)
+      const data = Array.from({ length: matrix.rows }, (_, i) =>
+        Array.from({ length: matrix.cols }, (_, j) => matrix.get(i, j).mul(s)),
+      )
+      return { outputs: { product: Matrix.fromRows(data) }, error: null }
     }
   }
 }
@@ -123,4 +150,15 @@ function evaluateMatrix(
     cells.push(values)
   }
   return { outputs: { m: Matrix.fromRows(cells) }, error: null }
+}
+
+function evaluateScalar(data: { value: string }): NodeEvaluation {
+  try {
+    const scalar = parseExact(data.value ?? '0')
+    const cells: Algebraic[][] = [[scalar]]
+    return { outputs: { s: Matrix.fromRows(cells) }, error: null }
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    return { outputs: { s: null }, error: { code: 'cell', row: 1, col: 1, reason } }
+  }
 }
