@@ -168,10 +168,6 @@ body {
   font-size: 13px;
 }
 
-.widget.wide {
-  min-width: 244px;
-}
-
 .widget-error {
   border-color: var(--error);
 }

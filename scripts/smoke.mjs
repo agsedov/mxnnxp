@@ -27,7 +27,7 @@ async function sampleEdgeVisibility(durationMs, stepMs = 20) {
   return samples
 }
 
-/** Drags from one slot (or header) to another with the given pointer. */
+/** Drags from one slot (or header) to another. */
 async function dragBetween(from, to) {
   const a = await from.boundingBox()
   const b = await to.boundingBox()
@@ -51,26 +51,52 @@ async function clickPath(path) {
 }
 
 const edgeCount = () => page.locator('.react-flow__edge').count()
-const gridText = async node => (await node.locator('.result-grid').textContent()).trim()
+const gridText = node => node.locator('.result-grid').textContent().then(text => text.trim())
+const nodeById = id => page.locator(`.react-flow__node[data-id="${id}"]`)
+const nodeIds = () =>
+  page.locator('.react-flow__node').evaluateAll(els => els.map(el => el.getAttribute('data-id')))
 
 await page.goto(BASE, { waitUntil: 'networkidle' })
 await page.waitForSelector('.react-flow__node', { timeout: 15000 })
-await page.waitForSelector('.result-grid', { timeout: 15000 })
+await page.waitForSelector('.cell', { timeout: 15000 })
 
-const nodeCount = await page.locator('.react-flow__node').count()
+const initialIds = await nodeIds()
+const nodeCount = initialIds.length
 const initialEdges = await edgeCount()
-const resultBefore = (await gridText(page.locator('.react-flow__node').nth(2))).trim()
 
-// Edit A's top-left cell to "1/2" — the result must follow with exact fractions.
-const matrixA = page.locator('.react-flow__node').nth(0)
-const matrixB = page.locator('.react-flow__node').nth(1)
-await matrixA.locator('.cell').first().fill('1/2')
+// Nodes are addressed by id: their DOM order can change as widgets are dragged.
+const [matrixA, matrixB, multiply] = initialIds.map(nodeById)
+
+// --- The multiply widget shows no values of its own: display them by driving a
+// matrix widget with the product (added fresh, then parked clear of the others).
+await page.click('text=+ Matrix')
 await page.waitForTimeout(300)
-const resultAfter = (await gridText(page.locator('.react-flow__node').nth(2))).trim()
+const displayId = (await nodeIds()).find(id => !initialIds.includes(id))
+const display = nodeById(displayId)
+
+const edgesBeforeConnect = await edgeCount()
+const connected = await dragBetween(
+  multiply.locator('.react-flow__handle-right').first(),
+  display.locator('.react-flow__handle-left').first(),
+)
+await page.waitForTimeout(250)
+const connection = {
+  connected,
+  edgeAdded: (await edgeCount()) === edgesBeforeConnect + 1,
+  identityProduct: await gridText(display),
+}
+
+// Exact fractions must survive multiply → driven matrix.
+await matrixA.locator('.cell').first().fill('1/2')
+await page.waitForTimeout(250)
+connection.halfProduct = await gridText(display)
+await matrixB.locator('.cell').first().fill('3')
+await page.waitForTimeout(250)
+connection.threeHalvesProduct = await gridText(display)
 
 // Editing a cell must not blank the wires for even one frame.
 const errorsBeforeEdit = errors.length
-await matrixB.locator('.cell').first().fill('3')
+await matrixA.locator('.cell').nth(2).fill('0/5')
 const editSamples = await sampleEdgeVisibility(300)
 const editErrors = errors.slice(errorsBeforeEdit)
 
@@ -81,36 +107,25 @@ const linked = await dragBetween(
   matrixB.locator('.react-flow__handle-left').first(),
 )
 await page.waitForTimeout(300)
-const passThrough = {
+const matrixInput = {
   linked,
-  edgeAdded: (await edgeCount()) === initialEdges + 1,
+  edgeAdded: (await edgeCount()) === initialEdges + 2,
   cellsHidden: (await matrixB.locator('.cell').count()) === 0,
-  drivenLabel: (await matrixB.locator('.slot-label').textContent()).trim(),
+  label: (await matrixB.locator('.slot-label').textContent()).trim(),
   showsUpstream: (await gridText(matrixB)) === '1/2001',
 }
 
 // The driven widget follows its upstream live.
 await matrixA.locator('.cell').first().fill('1/3')
 await page.waitForTimeout(250)
-passThrough.followsUpstream = (await gridText(matrixB)) === '1/3001'
+matrixInput.followsUpstream = (await gridText(matrixB)) === '1/3001'
 
 // Removing the wire makes the widget editable again, with its own values intact.
 await clickPath(page.locator('.react-flow__edge-path').last())
 await page.waitForTimeout(250)
-passThrough.editableAgain =
+matrixInput.editableAgain =
   (await matrixB.locator('.cell').count()) === 4 && (await matrixB.locator('.cell').first().inputValue()) === '3'
-passThrough.errors = errors.slice(errorsBeforeLink)
-
-// --- Slot dragging onto a freshly added widget connects it.
-const edgesBeforeConnect = await edgeCount()
-await page.click('text=+ Multiply')
-await page.waitForTimeout(300)
-const dragged = await dragBetween(
-  page.locator('.react-flow__handle-right').first(),
-  page.locator('.react-flow__node').last().locator('.react-flow__handle-left').first(),
-)
-await page.waitForTimeout(300)
-const connectOk = dragged && (await edgeCount()) === edgesBeforeConnect + 1
+matrixInput.errors = errors.slice(errorsBeforeLink)
 
 // --- Regression test: dragging a widget header must redraw continuously while
 // the pointer moves and must never blank the graph (React Flow error 015).
@@ -135,37 +150,33 @@ const atTarget = await widget.boundingBox()
 const followedTarget =
   Math.abs(atTarget.x - (before.x + 150)) < 15 && Math.abs(atTarget.y - (before.y + 90)) < 15
 
-// Still holding the button: every node and wire must be visible right now.
-const midNodeBoxes = await page.locator('.react-flow__node').evaluateAll(els =>
-  els.map(el => {
-    const r = el.getBoundingClientRect()
-    return { w: r.width, h: r.height }
-  }),
-)
-const midEdgeBoxes = await page.locator('.react-flow__edge-path').evaluateAll(els =>
-  els.map(el => {
-    const r = el.getBoundingClientRect()
-    return { w: r.width, h: r.height }
-  }),
-)
+const midNodesVisible = await page
+  .locator('.react-flow__node')
+  .evaluateAll(els => els.every(el => el.getBoundingClientRect().width > 0))
+const midEdges = await page
+  .locator('.react-flow__edge-path')
+  .evaluateAll(els =>
+    els.map(el => {
+      const r = el.getBoundingClientRect()
+      return r.width > 0 && r.height > 0
+    }),
+  )
 await page.mouse.up()
-await page.waitForTimeout(500)
+await page.waitForTimeout(250)
 
 const after = await widget.boundingBox()
-const postEdgeBoxes = await page.locator('.react-flow__edge-path').evaluateAll(els =>
-  els.map(el => {
-    const r = el.getBoundingClientRect()
-    return { w: r.width, h: r.height }
-  }),
-)
-const dragErrors = errors
-  .slice(errorsBeforeDrag)
-  .filter(e => e.includes('015') || e.includes('not initialized'))
-
-const dragMoved = before && after ? Math.abs(after.x - (before.x + 150)) < 15 : false
-const midNodesVisible = midNodeBoxes.length > 0 && midNodeBoxes.every(b => b.w > 0 && b.h > 0)
-const midEdgesVisible = midEdgeBoxes.length >= 2 && midEdgeBoxes.every(b => b.w > 0 && b.h > 0)
-const postEdgesVisible = postEdgeBoxes.length >= 2 && postEdgeBoxes.every(b => b.w > 0 && b.h > 0)
+const postEdges = await page
+  .locator('.react-flow__edge-path')
+  .evaluateAll(els =>
+    els.map(el => {
+      const r = el.getBoundingClientRect()
+      return r.width > 0 && r.height > 0
+    }),
+  )
+const moved = before && after ? Math.abs(after.x - (before.x + 150)) < 15 : false
+const midEdgesVisible = midEdges.length >= 2 && midEdges.every(Boolean)
+const postEdgesVisible = postEdges.length >= 2 && postEdges.every(Boolean)
+const dragErrors = errors.slice(errorsBeforeDrag).filter(e => e.includes('015'))
 
 await page.screenshot({ path: '/tmp/opencode/smoke.png' })
 await browser.close()
@@ -173,46 +184,48 @@ await browser.close()
 const report = {
   nodeCount,
   initialEdges,
-  resultBefore,
-  resultAfter,
-  connectOk,
+  connection,
   cellEdit: {
     samples: editSamples.length,
-    allFramesVisible: editSamples.length > 0 && editSamples.every(Boolean),
+    allFramesVisible: editSamples.every(Boolean),
     errors: editErrors,
   },
-  matrixInput: passThrough,
+  matrixInput,
   nodeDrag: {
     followedMidway,
     followedTarget,
-    dragMoved,
+    moved,
     midNodesVisible,
     midEdgesVisible,
     postEdgesVisible,
-    dragErrors,
+    errors: dragErrors,
   },
   errors,
 }
 console.log(JSON.stringify(report, null, 2))
 
 const failed =
-  nodeCount < 3 ||
-  initialEdges < 2 ||
-  resultAfter !== '1/2001' ||
-  !connectOk ||
+  nodeCount !== 3 ||
+  initialEdges !== 2 ||
+  !connection.connected ||
+  !connection.edgeAdded ||
+  connection.identityProduct !== '1001' ||
+  connection.halfProduct !== '1/2001' ||
+  connection.threeHalvesProduct !== '3/2001' ||
   editSamples.length === 0 ||
   !editSamples.every(Boolean) ||
   editErrors.length > 0 ||
-  !passThrough.linked ||
-  !passThrough.edgeAdded ||
-  !passThrough.cellsHidden ||
-  !passThrough.showsUpstream ||
-  !passThrough.followsUpstream ||
-  !passThrough.editableAgain ||
-  passThrough.errors.length > 0 ||
+  !matrixInput.linked ||
+  !matrixInput.edgeAdded ||
+  !matrixInput.cellsHidden ||
+  matrixInput.label !== 'in' ||
+  !matrixInput.showsUpstream ||
+  !matrixInput.followsUpstream ||
+  !matrixInput.editableAgain ||
+  matrixInput.errors.length > 0 ||
   !followedMidway ||
   !followedTarget ||
-  !dragMoved ||
+  !moved ||
   !midNodesVisible ||
   !midEdgesVisible ||
   !postEdgesVisible ||

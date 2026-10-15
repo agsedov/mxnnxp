@@ -9,8 +9,9 @@ the graph.
 - **Matrix widget** — edit an `n×m` grid of fractions (1×1 … 6×6), one input
   slot and one output slot. Connect something to its input and it becomes a
   read-only display (and relay) of that incoming matrix.
-- **Matrix multiply widget** — two input slots (A, B), one output; shows the
-  result shape, dimension errors, and a read-only result grid.
+- **Matrix multiply widget** — two input slots (Left, Right), one output; shows
+  the result shape and dimension errors. Connect the output to a matrix widget
+  to display the product.
 - **Exact numbers** — every value is a `Fraction` (Python `fractions.Fraction`
   style): normalized, immutable, and computed without floating point.
   See [docs/requirements.md](docs/requirements.md).

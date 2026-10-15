@@ -11,8 +11,8 @@ function scene(): { graph: Graph; evaluation: Evaluation } {
   graph = addNode(graph, 'matrix', 10, 200)
   graph = addNode(graph, 'matrixMultiply', 300, 100)
   const [a, b, product] = graph.nodes
-  graph = connect(graph, { node: a.id, port: 'm' }, { node: product.id, port: 'a' })
-  graph = connect(graph, { node: b.id, port: 'm' }, { node: product.id, port: 'b' })
+  graph = connect(graph, { node: a.id, port: 'm' }, { node: product.id, port: 'left' })
+  graph = connect(graph, { node: b.id, port: 'm' }, { node: product.id, port: 'right' })
   return { graph, evaluation: evaluateGraph(graph) }
 }
 
@@ -21,7 +21,7 @@ describe('reconcileNodes', () => {
     const { graph, evaluation } = scene()
     const nodes = reconcileNodes([], graph, evaluation)
     expect(nodes).toHaveLength(3)
-    expect(nodes[2].data.connectedInputs).toEqual(['a', 'b'])
+    expect(nodes[2].data.connectedInputs).toEqual(['left', 'right'])
     expect(nodes[0].data.connectedOutputs).toEqual(['m'])
     expect(nodes[0].position).toEqual({ x: 10, y: 20 })
   })
@@ -80,7 +80,7 @@ describe('reconcileEdges', () => {
       source: graph.nodes[0].id,
       sourceHandle: 'm',
       target: graph.nodes[2].id,
-      targetHandle: 'a',
+      targetHandle: 'left',
     })
   })
 

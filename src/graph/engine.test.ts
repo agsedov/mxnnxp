@@ -48,8 +48,8 @@ describe('connect', () => {
     graph = addNode(graph, 'matrixMultiply', 200, 50)
     const [a, b, multiply] = graph.nodes
 
-    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'a' })
-    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'a' })
+    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'left' })
+    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'left' })
 
     expect(graph.connections).toHaveLength(1)
     expect(graph.connections[0].from.node).toBe(b.id)
@@ -58,8 +58,8 @@ describe('connect', () => {
   it('rejects unknown slots and self-connections', () => {
     let graph = addNode(createGraph(), 'matrixMultiply', 0, 0)
     const multiply = graph.nodes[0]
-    expect(() => connect(graph, { node: multiply.id, port: 'nope' }, { node: multiply.id, port: 'a' })).toThrow()
-    expect(() => connect(graph, { node: multiply.id, port: 'product' }, { node: multiply.id, port: 'a' })).toThrow()
+    expect(() => connect(graph, { node: multiply.id, port: 'nope' }, { node: multiply.id, port: 'left' })).toThrow()
+    expect(() => connect(graph, { node: multiply.id, port: 'product' }, { node: multiply.id, port: 'left' })).toThrow()
   })
 })
 
@@ -69,7 +69,7 @@ describe('removeNode', () => {
     graph = addNode(graph, 'matrix', 0, 0)
     graph = addNode(graph, 'matrixMultiply', 200, 0)
     const [matrix, multiply] = graph.nodes
-    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: multiply.id, port: 'a' })
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: multiply.id, port: 'left' })
 
     const next = removeNode(graph, matrix.id)
     expect(next.nodes).toHaveLength(1)
@@ -107,8 +107,8 @@ describe('evaluateGraph', () => {
     const [a, b, multiply] = graph.nodes
     graph = setMatrixCells(graph, a.id, [['1/2', '1/2'], ['0', '1']])
     graph = setMatrixCells(graph, b.id, [['1/3', '0'], ['0', '2/3']])
-    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'a' })
-    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'b' })
+    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'left' })
+    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'right' })
 
     const result = evaluateGraph(graph).get(multiply.id)
     expect(result?.error).toBeNull()
@@ -123,8 +123,8 @@ describe('evaluateGraph', () => {
     const [a, b, multiply] = graph.nodes
     graph = setMatrixCells(graph, a.id, [['1', '2', '3']])
     graph = setMatrixCells(graph, b.id, [['1', '2']])
-    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'a' })
-    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'b' })
+    graph = connect(graph, { node: a.id, port: 'm' }, { node: multiply.id, port: 'left' })
+    graph = connect(graph, { node: b.id, port: 'm' }, { node: multiply.id, port: 'right' })
 
     const result = evaluateGraph(graph).get(multiply.id)
     expect(result?.outputs.product).toBeNull()
@@ -144,8 +144,8 @@ describe('evaluateGraph', () => {
     graph = addNode(graph, 'matrixMultiply', 0, 0)
     graph = addNode(graph, 'matrixMultiply', 200, 0)
     const [first, second] = graph.nodes
-    graph = connect(graph, { node: first.id, port: 'product' }, { node: second.id, port: 'a' })
-    graph = connect(graph, { node: second.id, port: 'product' }, { node: first.id, port: 'a' })
+    graph = connect(graph, { node: first.id, port: 'product' }, { node: second.id, port: 'left' })
+    graph = connect(graph, { node: second.id, port: 'product' }, { node: first.id, port: 'left' })
 
     const evaluation = evaluateGraph(graph)
     expect(evaluation.get(first.id)?.error).toBe('Cycle detected')
@@ -210,8 +210,8 @@ describe('matrix widget input slot', () => {
     graph = addNode(graph, 'matrixMultiply', 400, 100)
     const [, driven, factor, multiply] = graph.nodes
     graph = setMatrixCells(graph, factor.id, [['1', '0'], ['0', '1']])
-    graph = connect(graph, { node: driven.id, port: 'm' }, { node: multiply.id, port: 'a' })
-    graph = connect(graph, { node: factor.id, port: 'm' }, { node: multiply.id, port: 'b' })
+    graph = connect(graph, { node: driven.id, port: 'm' }, { node: multiply.id, port: 'left' })
+    graph = connect(graph, { node: factor.id, port: 'm' }, { node: multiply.id, port: 'right' })
 
     // Passing its own 1×1 cell along would be a dimension mismatch instead.
     expect(evaluateGraph(graph).get(multiply.id)?.outputs.product?.toString()).toBe('[1/2, 0] [0, 1]')

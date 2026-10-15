@@ -33,10 +33,10 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     kind: 'matrixMultiply',
     label: 'Matrix multiply',
     inputs: [
-      { id: 'a', label: 'A' },
-      { id: 'b', label: 'B' },
+      { id: 'left', label: 'Left' },
+      { id: 'right', label: 'Right' },
     ],
-    outputs: [{ id: 'product', label: 'A × B' }],
+    outputs: [{ id: 'product', label: 'Left × Right' }],
   },
 }
 
@@ -73,18 +73,18 @@ export function evaluateNode(
         connectedInputs.has(MATRIX_INPUT_PORT),
       )
     case 'matrixMultiply': {
-      const a = inputs.a ?? null
-      const b = inputs.b ?? null
-      if (!a || !b) {
+      const left = inputs.left ?? null
+      const right = inputs.right ?? null
+      if (!left || !right) {
         return { outputs: { product: null }, error: null }
       }
       try {
-        return { outputs: { product: Matrix.multiply(a, b) }, error: null }
+        return { outputs: { product: Matrix.multiply(left, right) }, error: null }
       } catch (error) {
         if (error instanceof MatrixDimensionError) {
           return {
             outputs: { product: null },
-            error: `Dimension mismatch: ${a.rows}×${a.cols} times ${b.rows}×${b.cols}`,
+            error: `Dimension mismatch: ${left.rows}×${left.cols} times ${right.rows}×${right.cols}`,
           }
         }
         throw error

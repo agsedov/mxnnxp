@@ -71,15 +71,17 @@ Concrete rules:
 
 ## R4 — Matrix multiply widget
 
-- Two **input slots**: `A` and `B`. One **output slot**: `A × B`.
+- Two **input slots**: `Left` and `Right` (the left factor and the right factor).
+  One **output slot**: the product.
 - Computes the exact matrix product over `Fraction`s whenever both inputs
   carry a value.
 - Unconnected / upstream-unavailable inputs → widget shows a calm
   "waiting for …" state (not an error).
-- Dimension mismatch (`A.cols ≠ B.rows`) → error message with both shapes on
-  the widget; no output value.
-- The widget shows the result shape and a read-only grid of the result in
-  `n/d` form.
+- Dimension mismatch (`left.cols ≠ right.rows`) → error message with both shapes
+  on the widget; no output value.
+- The widget shows the shape of the result and its own status; the values
+  themselves are shown by whatever widget the product is connected to (e.g. a
+  matrix widget driven by it).
 
 ## R5 — Graph semantics
 

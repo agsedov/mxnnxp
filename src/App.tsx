@@ -43,8 +43,8 @@ function createInitialGraph(): Graph {
   graph = addNode(graph, 'matrix', 40, 430)
   graph = addNode(graph, 'matrixMultiply', 430, 260)
   const [factorA, factorB, product] = graph.nodes
-  graph = connect(graph, { node: factorA.id, port: 'm' }, { node: product.id, port: 'a' })
-  graph = connect(graph, { node: factorB.id, port: 'm' }, { node: product.id, port: 'b' })
+  graph = connect(graph, { node: factorA.id, port: 'm' }, { node: product.id, port: 'left' })
+  graph = connect(graph, { node: factorB.id, port: 'm' }, { node: product.id, port: 'right' })
   return graph
 }
 

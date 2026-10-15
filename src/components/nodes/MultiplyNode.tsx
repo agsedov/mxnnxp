@@ -2,15 +2,15 @@ import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { useContext } from 'react'
 import { GraphActionsContext } from '../GraphActionsContext'
-import { MatrixView } from '../MatrixView'
+import { WIDGET_SPECS } from '../../graph/widgets'
 import type { FlowNode } from '../flowTypes'
 
 /**
  * Y offsets of the slots, aligned with the body rows:
  * header (34) + body padding-top (10) + half row height (14), then one row lower.
  */
-const SLOT_A_Y = 58
-const SLOT_B_Y = 86
+const SLOT_LEFT_Y = 58
+const SLOT_RIGHT_Y = 86
 
 export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
   const { removeNode } = useContext(GraphActionsContext)
@@ -21,7 +21,7 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
   }
 
   const product = evaluation?.outputs.product ?? null
-  const missing = (['a', 'b'] as const).filter(id => !connectedInputs.includes(id))
+  const missing = WIDGET_SPECS[source.kind].inputs.filter(port => !connectedInputs.includes(port.id))
 
   let status
   if (evaluation?.error) {
@@ -29,13 +29,13 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
   } else if (product) {
     status = <span className="msg ok">{`${product.rows}×${product.cols} result`}</span>
   } else if (missing.length > 0) {
-    status = <span className="msg dim">waiting for {missing.join(' and ')}</span>
+    status = <span className="msg dim">waiting for {missing.map(port => port.label.toLowerCase()).join(' and ')}</span>
   } else {
     status = <span className="msg dim">no value yet</span>
   }
 
   return (
-    <div className={`widget wide${evaluation?.error ? ' widget-error' : ''}${selected ? ' widget-selected' : ''}`}>
+    <div className={`widget${evaluation?.error ? ' widget-error' : ''}${selected ? ' widget-selected' : ''}`}>
       <div className="widget-header">
         <span className="widget-title">Matrix multiply</span>
         <button className="widget-remove nodrag" title="Remove widget" onClick={() => removeNode(source.id)}>
@@ -47,30 +47,29 @@ export function MultiplyNode({ data, selected }: NodeProps<FlowNode>) {
           <Handle
             type="target"
             position={Position.Left}
-            id="a"
-            style={{ top: SLOT_A_Y }}
-            className={connectedInputs.includes('a') ? 'slot-connected' : undefined}
+            id="left"
+            style={{ top: SLOT_LEFT_Y }}
+            className={connectedInputs.includes('left') ? 'slot-connected' : undefined}
           />
-          <span className="slot-label">A</span>
+          <span className="slot-label">Left</span>
         </div>
         <div className="slot-row">
           <Handle
             type="target"
             position={Position.Left}
-            id="b"
-            style={{ top: SLOT_B_Y }}
-            className={connectedInputs.includes('b') ? 'slot-connected' : undefined}
+            id="right"
+            style={{ top: SLOT_RIGHT_Y }}
+            className={connectedInputs.includes('right') ? 'slot-connected' : undefined}
           />
-          <span className="slot-label">B</span>
+          <span className="slot-label">Right</span>
         </div>
         <div className="status-row">{status}</div>
-        {product && <MatrixView matrix={product} />}
       </div>
       <Handle
         type="source"
         position={Position.Right}
         id="product"
-        style={{ top: SLOT_A_Y }}
+        style={{ top: SLOT_LEFT_Y }}
         className={connectedOutputs.includes('product') ? 'slot-connected' : undefined}
       />
     </div>
