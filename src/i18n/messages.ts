@@ -14,8 +14,23 @@ export const LOCALES: readonly Locale[] = ['en', 'ru']
 export const DEFAULT_LOCALE: Locale = 'en'
 export const LOCALE_LABELS: Record<Locale, string> = { en: 'EN', ru: 'RU' }
 
+/** Query-string parameter that forces the interface language, e.g. `?lang=ru`. */
+export const LOCALE_PARAM = 'lang'
+
 export function isLocale(value: unknown): value is Locale {
   return value === 'en' || value === 'ru'
+}
+
+/**
+ * Chooses the language to start in. An explicit `?lang=` value wins over the
+ * saved preference, so a link can force a language; anything unrecognized is
+ * ignored and the saved value (or the default) is used instead.
+ */
+export function resolveLocale(param: string | null, stored: string | null): Locale {
+  if (isLocale(param)) {
+    return param
+  }
+  return isLocale(stored) ? stored : DEFAULT_LOCALE
 }
 
 export const en = {

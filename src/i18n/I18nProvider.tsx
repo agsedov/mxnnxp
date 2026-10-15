@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { I18nContext, type I18nValue } from './context'
-import { DEFAULT_LOCALE, MESSAGES, interpolate, isLocale, type Locale, type MessageKey, type Vars } from './messages'
+import { LOCALE_PARAM, MESSAGES, interpolate, resolveLocale, type Locale, type MessageKey, type Vars } from './messages'
 
 const STORAGE_KEY = 'mxnnxp.locale'
 
-/** The saved language, or the default when it is absent or unrecognized. */
+/**
+ * The language to start in. A `?lang=` query parameter wins over the saved
+ * preference, so a link can force a language; otherwise the saved value, and
+ * finally the default.
+ */
 function initialLocale(): Locale {
-  if (typeof localStorage === 'undefined') {
-    return DEFAULT_LOCALE
-  }
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return isLocale(stored) ? stored : DEFAULT_LOCALE
+  const param = new URLSearchParams(window.location.search).get(LOCALE_PARAM)
+  const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(STORAGE_KEY)
+  return resolveLocale(param, stored)
 }
 
 /**

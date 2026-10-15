@@ -164,6 +164,10 @@ unaffected.
 - The interface is bilingual: **English** and **Russian** — and only those two.
 - A toolbar switch (EN / RU) changes the language immediately, with no reload.
   The choice is remembered across reloads and kept in step with `<html lang>`.
+- The starting language can be forced with a query parameter: **`?lang=ru`** (or
+  `?lang=en`). It overrides the saved preference for that page load and is *not*
+  written back to storage, so a link can pin a language; an unrecognized value
+  is ignored and the saved preference (or English) is used instead.
 - Every user-facing string is translated: widget titles, slot labels, status
   messages and errors.
 - The graph engine stays locale-free. It reports **structured** errors

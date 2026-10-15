@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { describeNodeError, portLabelKey, WIDGET_TITLE_KEY } from './labels'
-import { en, interpolate, isLocale, MESSAGES, ru, type Locale, type TFunction } from './messages'
+import { en, interpolate, isLocale, MESSAGES, resolveLocale, ru, type Locale, type TFunction } from './messages'
 
 /** The real translator, without the React provider, for pure tests. */
 function translator(locale: Locale): TFunction {
@@ -45,6 +45,21 @@ describe('isLocale', () => {
     expect(isLocale('de')).toBe(false)
     expect(isLocale(null)).toBe(false)
     expect(isLocale(undefined)).toBe(false)
+  })
+})
+
+describe('resolveLocale', () => {
+  it('lets the ?lang parameter override the stored preference', () => {
+    expect(resolveLocale('ru', 'en')).toBe('ru')
+    expect(resolveLocale('en', 'ru')).toBe('en')
+  })
+
+  it('falls back to the stored preference, then to the default', () => {
+    expect(resolveLocale(null, 'ru')).toBe('ru')
+    expect(resolveLocale('', 'ru')).toBe('ru')
+    expect(resolveLocale('de', 'ru')).toBe('ru')
+    expect(resolveLocale(null, null)).toBe('en')
+    expect(resolveLocale('de', 'nonsense')).toBe('en')
   })
 })
 

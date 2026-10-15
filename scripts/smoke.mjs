@@ -223,6 +223,28 @@ locale.htmlLangAfter = await page.evaluate(() => document.documentElement.lang)
 locale.errors = errors.slice(errorsBeforeLocale)
 
 await page.screenshot({ path: '/tmp/opencode/smoke.png' })
+
+// --- Forcing the language with ?lang=…: the query parameter overrides the saved
+// preference (here 'en') and is not written back to storage.
+await page.goto(`${BASE}/?lang=ru`, { waitUntil: 'networkidle' })
+await page.waitForSelector('.react-flow__node', { timeout: 15000 })
+const forced = {
+  htmlLang: await page.evaluate(() => document.documentElement.lang),
+  addMatrix: (await page.locator('.toolbar .btn').first().textContent()).trim(),
+  activeBtn: (await page.locator('.lang-btn-active').textContent()).trim(),
+  stored: await page.evaluate(() => localStorage.getItem('mxnnxp.locale')),
+}
+
+// An unknown value is ignored, falling back to the saved preference.
+await page.goto(`${BASE}/?lang=de`, { waitUntil: 'networkidle' })
+await page.waitForSelector('.react-flow__node', { timeout: 15000 })
+forced.invalidParamLang = await page.evaluate(() => document.documentElement.lang)
+forced.errors = errors.slice(errorsBeforeLocale)
+
+await page.goto(`${BASE}/?lang=ru`, { waitUntil: 'networkidle' })
+await page.waitForSelector('.react-flow__node', { timeout: 15000 })
+await page.screenshot({ path: '/tmp/opencode/smoke.png' })
+
 await browser.close()
 
 const report = {
@@ -245,6 +267,7 @@ const report = {
     errors: dragErrors,
   },
   locale,
+  forced,
   errors,
 }
 console.log(JSON.stringify(report, null, 2))
@@ -289,5 +312,11 @@ const failed =
   locale.backToEnglish !== '+ Matrix' ||
   locale.htmlLangAfter !== 'en' ||
   locale.errors.length > 0 ||
+  forced.htmlLang !== 'ru' ||
+  forced.addMatrix !== '+ Матрица' ||
+  forced.activeBtn !== 'RU' ||
+  forced.stored !== 'en' ||
+  forced.invalidParamLang !== 'en' ||
+  forced.errors.length > 0 ||
   errors.length > 0
 process.exit(failed ? 1 : 0)
