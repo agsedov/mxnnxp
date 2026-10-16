@@ -567,3 +567,11 @@ body {
 .tex .katex {
   font-size: 1.15em;
 }
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 720px) {
+  .hint {
+    display: none;
+  }
+}
