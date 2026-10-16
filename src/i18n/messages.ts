@@ -37,11 +37,16 @@ export const en = {
   'lang.label': 'Language',
 
   'toolbar.addMenu': 'Add...',
+  'toolbar.presets': 'Presets',
   'toolbar.reset': 'Reset',
   'toolbar.share': 'Share link',
   'toolbar.shareCopied': 'Link copied',
   'toolbar.hint':
     'drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove',
+
+  'presets.loading': 'Loading…',
+  'presets.failed': 'Could not load preset',
+  'presets.empty': 'No presets yet',
 
   'widget.matrix.title': 'Matrix',
   'widget.matrixMultiply.title': 'Matrix multiply',
@@ -108,11 +113,16 @@ export const ru: Messages = {
   'lang.label': 'Язык',
 
   'toolbar.addMenu': 'Добавить...',
+  'toolbar.presets': 'Пресеты',
   'toolbar.reset': 'Сброс',
   'toolbar.share': 'Ссылка',
   'toolbar.shareCopied': 'Ссылка скопирована',
   'toolbar.hint':
     'перетаскивайте виджеты, чтобы двигать · перетащите слот на другой, чтобы соединить · щёлкните провод или нажмите ⌫, чтобы удалить',
+
+  'presets.loading': 'Загрузка…',
+  'presets.failed': 'Не удалось загрузить пресет',
+  'presets.empty': 'Пресетов пока нет',
 
   'widget.matrix.title': 'Матрица',
   'widget.matrixMultiply.title': 'Умножение матриц',

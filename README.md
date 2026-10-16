@@ -39,6 +39,13 @@ the graph.
   step. A `?lang=ru` (or `?lang=en`) query parameter forces the language for that
   load. Translations live in `src/i18n/`; the graph engine itself stays
   locale-free and reports structured errors the UI renders per language.
+- **Presets** — the toolbar's *Presets* dropdown lists ready-made scenes from
+  `presets/index.json` (names in the active language); picking one fetches that
+  preset's static file — the same payload a share link carries — and replaces
+  the canvas with it. Both the catalog and the presets are plain static files
+  under `/presets/`, fetched lazily, so any file server can host them. To add
+  one: build the scene, press *Share link*, and save what follows `#g=` in the
+  copied URL as `presets/<name>.txt`, listed in `presets/index.json`.
 - **Shareable links** — *Share link* copies a URL that reopens the canvas with
   the same widgets, their content, positions and wires. The graph rides in the
   URL fragment (`#g=<base64url>`), so opening such a link rebuilds the scene and
@@ -99,6 +106,8 @@ src/graph/       widget specs, connection rules, topological evaluation, structu
 src/i18n/        English/Russian catalogue, provider + useI18n, label and error text
 src/components/  React Flow canvas, widget components, TeX rendering, graph ⇄ canvas sync
 src/share.ts     URL fragment plumbing for shareable links (graph ↔ `#g=`)
+src/presets.ts   lazy loading of the preset catalog and preset files (`presets/`, static)
+presets/         the presets themselves: `index.json` (catalog, en/ru names) + one file per scene
 docs/            requirements (incl. the TeX update-cycle policy)
 ```
 

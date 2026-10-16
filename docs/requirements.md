@@ -266,6 +266,33 @@ unaffected.
 
 ---
 
+## R12 — Presets
+
+- A preset is a saved scene stored as a **plain static file** under
+  `/presets/`, carrying the state in exactly the format a `#g=` link carries
+  (R10) — so opening a preset is the same strict decode as opening a shared
+  link, and the deploy host stays a dumb file server.
+- The catalog `presets/index.json` lists the preset files with their readable
+  names per language (`en`, `ru`); the toolbar's **Presets** dropdown is built
+  from it and labelled in the active language.
+- Both files are fetched **lazily**: the catalog on the first open of the
+  dropdown, a preset only when its entry is picked. Neither rides in the
+  initial page load or the JS bundle.
+- Picking an entry replaces the canvas with the preset and fits the view to
+  the scene. A preset that cannot be fetched or decoded leaves the canvas as
+  it is — the failure is shown briefly on the trigger, never a blank or
+  half-restored scene; overlapping picks apply only the most recent one.
+- Catalog parsing is lenient (entries with an unsafe file name or missing
+  names are skipped, a malformed catalog reads as "no presets"); file names
+  are restricted to `[A-Za-z0-9][A-Za-z0-9._-]*`, so a hand-edited catalog can
+  never make the app request anything outside `/presets/`. Pure parsing lives
+  in `src/presets.ts` (unit-tested); the dropdown is
+  `src/components/PresetMenu.tsx`.
+- Vite serves `./presets` at `/presets/…` in dev and copies the directory into
+  `dist/presets/` on build (a small plugin in `vite.config.ts`).
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |

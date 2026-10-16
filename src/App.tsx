@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   applyEdgeChanges,
   applyNodeChanges,
@@ -11,6 +11,7 @@ import {
   type Edge,
   type EdgeChange,
   type NodeChange,
+  type ReactFlowInstance,
 } from '@xyflow/react'
 
 import { AddWidgetMenu } from './components/AddWidgetMenu'
@@ -18,6 +19,7 @@ import { GraphActionsContext } from './components/GraphActionsContext'
 import { LanguageSwitch } from './components/LanguageSwitch'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
+import { PresetMenu } from './components/PresetMenu'
 import { RowEchelonNode } from './components/nodes/RowEchelonNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
@@ -76,6 +78,11 @@ export default function App() {
   const [opening, setOpening] = useState(() => hasGraphHash(window.location.hash))
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
+
+  // The mounted canvas instance, kept so the viewport can be steered from
+  // outside React Flow's own callbacks — after a preset loads, the scene it
+  // brings may sit anywhere in the infinite canvas.
+  const flowInstance = useRef<ReactFlowInstance<FlowNode, Edge> | null>(null)
 
   // React Flow owns the interaction state (position, measured size, selection)
   // and is the only writer of `flowNodes` / `flowEdges`. The domain graph is
@@ -173,6 +180,13 @@ export default function App() {
     setGraph(createInitialGraph())
   }, [])
 
+  // Replaces the canvas with a preset picked in the Presets dropdown, then
+  // brings the whole scene into view.
+  const openPreset = useCallback((preset: Graph) => {
+    setGraph(preset)
+    flowInstance.current?.fitView({ duration: 250, padding: 0.3 })
+  }, [])
+
   // Copy a link that reopens the canvas exactly as it is now (widgets, their
   // content, positions and wires). If the clipboard is unavailable, fall back to
   // putting the link in the address bar so it can still be copied by hand.
@@ -226,6 +240,7 @@ export default function App() {
         <header className="toolbar">
           <span className="brand">mxnnxp</span>
           <AddWidgetMenu onAdd={addWidget} />
+          <PresetMenu onOpen={openPreset} />
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}
           </button>
@@ -240,6 +255,9 @@ export default function App() {
             nodes={nodes}
             edges={edges}
             nodeTypes={NODE_TYPES}
+            onInit={instance => {
+              flowInstance.current = instance
+            }}
             onNodesChange={onNodesChange}
             onNodeDragStop={onNodeDragStop}
             onEdgesChange={onEdgesChange}
