@@ -1,6 +1,6 @@
-import { parseExact, type Algebraic } from '../math/exact'
+import { parseExact, COS_SIN_TABLE, type Algebraic } from '../math/exact'
 import { Matrix, MatrixDimensionError } from '../math/matrix'
-import type { GraphNode, MatrixNodeData, NodeEvaluation, VectorCanvasMode, VectorCanvasNodeData } from './types'
+import type { GraphNode, MatrixNodeData, NodeEvaluation, RotationNodeData, VectorCanvasMode, VectorCanvasNodeData } from './types'
 import { fitsVectorMode, vectorComponents, vectorCount } from './vectorCanvas'
 
 export interface PortSpec {
@@ -51,6 +51,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [{ id: 'm' }],
     outputs: [],
   },
+  rotation: {
+    kind: 'rotation',
+    inputs: [],
+    outputs: [{ id: 'm' }],
+  },
 }
 
 export function defaultMatrixData(): MatrixNodeData {
@@ -70,6 +75,10 @@ export function defaultScalarData(): { value: string } {
 
 export function defaultVectorCanvasData(): VectorCanvasNodeData {
   return { mode: 'rows' }
+}
+
+export function defaultRotationData(): RotationNodeData {
+  return { angle: '0' }
 }
 
 /**
@@ -94,6 +103,8 @@ export function evaluateNode(
       )
     case 'scalar':
       return evaluateScalar(node.data)
+    case 'rotation':
+      return evaluateRotation(node.data)
     case 'vectorCanvas':
       return evaluateVectorCanvas(inputs.m ?? null, node.data.mode)
     case 'matrixMultiply': {
@@ -173,6 +184,12 @@ function evaluateScalar(data: { value: string }): NodeEvaluation {
     const reason = error instanceof Error ? error.message : String(error)
     return { outputs: { s: null }, error: { code: 'cell', row: 1, col: 1, reason } }
   }
+}
+
+/** A 2D rotation source: an exact `[[cos, -sin], [sin, cos]]` matrix. */
+function evaluateRotation(data: RotationNodeData): NodeEvaluation {
+  const [cos, sin] = COS_SIN_TABLE[data.angle] ?? COS_SIN_TABLE['0']
+  return { outputs: { m: Matrix.fromRows([[cos, sin.neg()], [sin, cos]]) }, error: null }
 }
 
 function evaluateVectorCanvas(matrix: Matrix<Algebraic> | null, mode: VectorCanvasMode): NodeEvaluation {

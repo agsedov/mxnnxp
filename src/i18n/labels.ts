@@ -12,6 +12,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   scalar: 'widget.scalar.title',
   scalarMultiply: 'widget.scalarMultiply.title',
   vectorCanvas: 'widget.vectorCanvas.title',
+  rotation: 'widget.rotation.title',
 }
 
 const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
@@ -34,6 +35,9 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
   },
   vectorCanvas: {
     m: 'widget.vectorCanvas.port.m',
+  },
+  rotation: {
+    m: 'widget.rotation.port.m',
   },
 }
 

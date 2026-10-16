@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Algebraic } from './algebraic'
-import { COS_SIN_TABLE } from './angles'
+import { COS_SIN_TABLE, angleLabel } from './angles'
 
 describe('COS_SIN_TABLE', () => {
   it('lists the 16 distinct basic angles once each', () => {
@@ -41,5 +41,13 @@ describe('COS_SIN_TABLE', () => {
     for (const [angle, [cos, sin]] of Object.entries(COS_SIN_TABLE)) {
       expect(cos.mul(cos).add(sin.mul(sin)).equals(Algebraic.ONE), angle).toBe(true)
     }
+  })
+
+  it('writes the π letter for display', () => {
+    expect(angleLabel('0')).toBe('0')
+    expect(angleLabel('pi')).toBe('π')
+    expect(angleLabel('pi/6')).toBe('π/6')
+    expect(angleLabel('11pi/6')).toBe('11π/6')
+    expect(Object.keys(COS_SIN_TABLE).map(angleLabel)).not.toContain('pi')
   })
 })

@@ -18,6 +18,10 @@ the graph.
   auto-scaled to fit. A switch inside the widget flips the reading mode; a shape
   that does not fit the mode, or a component with an imaginary part, is reported
   as an error.
+- **Rotation source** — a source widget with a dropdown of the basic angles
+  (`0`, `π/6`, `π/4`, …). Picking one emits the exact 2D rotation matrix
+  `[[cos, -sin], [sin, cos]]` for it, read from a lookup table of exact cos/sin
+  pairs — no approximation enters the value path.
 - **Exact numbers** — all values are exact, never floating point. The math layer
   implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
   `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as

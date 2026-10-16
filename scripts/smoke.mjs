@@ -147,6 +147,45 @@ matrixInput.editableAgain =
   (await matrixB.locator('.cell').count()) === 4 && (await matrixB.locator('.cell').first().inputValue()) === '3'
 matrixInput.errors = errors.slice(errorsBeforeLink)
 
+// --- Rotation source: a dropdown of the basic angles (spelled with the π
+// letter) emits the exact 2D rotation matrix on its output slot. Exercised
+// before the canvas section, whose mode buttons select that widget and would
+// then cover the newer rotation widget.
+const errorsBeforeRotation = errors.length
+await page.click('text=+ Rotation')
+await page.waitForTimeout(300)
+const rotationId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId)
+const rotation = nodeById(rotationId)
+const angleSelect = rotation.locator('.angle-select')
+const options = await angleSelect.locator('option').allTextContents()
+
+const rotationSource = {
+  optionCount: options.length,
+  piLabels: options.filter(label => label.includes('π')).length,
+  noLatinPi: options.every(label => !label.includes('pi')),
+  firstLabel: options[0],
+  startingValue: await angleSelect.inputValue(),
+}
+
+// The output slot drives the matrix widget, which shows the matrix it emits.
+const rotationLinked = await dragBetween(
+  rotation.locator('.react-flow__handle-right').first(),
+  display.locator('.react-flow__handle-left').first(),
+)
+await page.waitForTimeout(300)
+rotationSource.linked = rotationLinked
+rotationSource.identityTex = await texSource(display)
+
+await angleSelect.selectOption('pi/6')
+await page.waitForTimeout(250)
+rotationSource.sixthPiTex = await texSource(display)
+
+await angleSelect.selectOption('pi/2')
+await page.waitForTimeout(250)
+rotationSource.halfPiTex = await texSource(display)
+rotationSource.pickedValue = await angleSelect.inputValue()
+rotationSource.errors = errors.slice(errorsBeforeRotation)
+
 // --- Vector canvas: draws the input matrix's rows (or columns) as arrows from
 // the origin; the reading mode is switched from inside the widget.
 const errorsBeforeCanvas = errors.length
@@ -155,7 +194,7 @@ for (const [index, value] of ['1', '2', '3', '4'].entries()) {
 }
 await page.click('text=+ Vector Canvas')
 await page.waitForTimeout(300)
-const canvasId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId)
+const canvasId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId && id !== rotationId)
 const canvas = nodeById(canvasId)
 
 const canvasLinked = await dragBetween(
@@ -305,6 +344,7 @@ const report = {
   },
   matrixInput,
   vectorCanvas,
+  rotationSource,
   nodeDrag: {
     followedMidway,
     followedTarget,
@@ -352,6 +392,17 @@ const failed =
   !vectorCanvas.errorCleared ||
   vectorCanvas.complexError !== 'Row 1, column 1: complex numbers cannot be plotted' ||
   vectorCanvas.errors.length > 0 ||
+  rotationSource.optionCount !== 16 ||
+  rotationSource.piLabels !== 15 ||
+  !rotationSource.noLatinPi ||
+  rotationSource.firstLabel !== '0' ||
+  rotationSource.startingValue !== '0' ||
+  !rotationSource.linked ||
+  rotationSource.identityTex !== pmatrix(['1 & 0', '0 & 1']) ||
+  rotationSource.sixthPiTex !== pmatrix(['\\frac{\\sqrt{3}}{2} & -\\frac{1}{2}', '\\frac{1}{2} & \\frac{\\sqrt{3}}{2}']) ||
+  rotationSource.halfPiTex !== pmatrix(['0 & -1', '1 & 0']) ||
+  rotationSource.pickedValue !== 'pi/2' ||
+  rotationSource.errors.length > 0 ||
   !followedMidway ||
   !followedTarget ||
   !moved ||

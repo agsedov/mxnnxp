@@ -16,8 +16,7 @@ const half = Algebraic.fromRational(Rational.make(1n, 2n))
 const sqrt2over2 = Algebraic.sqrt(Rational.make(1n, 2n))
 const sqrt3over2 = Algebraic.sqrt(Rational.make(3n, 4n))
 
-export const COS_SIN_TABLE: Record<string, CosSin> = {
-  '0': [Algebraic.ONE, Algebraic.ZERO],
+export const COS_SIN_TABLE: Record<string, CosSin> = {  '0': [Algebraic.ONE, Algebraic.ZERO],
   'pi/6': [sqrt3over2, half],
   'pi/4': [sqrt2over2, sqrt2over2],
   'pi/3': [half, sqrt3over2],
@@ -33,4 +32,9 @@ export const COS_SIN_TABLE: Record<string, CosSin> = {
   '5pi/3': [half, sqrt3over2.neg()],
   '7pi/4': [sqrt2over2, sqrt2over2.neg()],
   '11pi/6': [sqrt3over2, half.neg()],
+}
+
+/** Writes an angle key with the π letter: `'pi/6'` → `'π/6'`, `'11pi/6'` → `'11π/6'`. */
+export function angleLabel(angle: string): string {
+  return angle.replace('pi', 'π')
 }

@@ -7,9 +7,10 @@ import {
   evaluateGraph,
   removeNode,
   updateMatrixData,
+  updateRotationData,
   updateVectorCanvasData,
 } from './engine'
-import { MATRIX_INPUT_PORT, defaultMatrixData } from './widgets'
+import { MATRIX_INPUT_PORT, defaultMatrixData, defaultRotationData } from './widgets'
 import type { Graph, MatrixNodeData } from './types'
 
 function withCells(cells: string[][]): MatrixNodeData {
@@ -330,5 +331,50 @@ describe('vector canvas widget', () => {
   it('produces no output value on any slot', () => {
     const { graph, canvas } = canvasScene('rows', [['1', '0'], ['0', '1']])
     expect(evaluateGraph(graph).get(canvas.id)?.outputs).toEqual({})
+  })
+})
+
+describe('rotation widget', () => {
+  /** A rotation source set to one of the basic angles. */
+  function rotationScene(angle: string) {
+    let graph = addNode(createGraph(), 'rotation', 0, 0)
+    const rotation = graph.nodes[0]
+    graph = updateRotationData(graph, rotation.id, { angle })
+    return { graph, rotation }
+  }
+
+  it('starts at angle 0, the identity matrix', () => {
+    const graph = addNode(createGraph(), 'rotation', 0, 0)
+    const node = graph.nodes[0]
+    if (node.kind !== 'rotation') throw new Error('expected a rotation widget')
+    expect(node.data).toEqual(defaultRotationData())
+    expect(evaluateGraph(graph).get(node.id)?.outputs.m?.toString()).toBe('[1, 0] [0, 1]')
+  })
+
+  it('emits the exact rotation matrix for the selected angle', () => {
+    const { graph, rotation } = rotationScene('pi/2')
+    expect(evaluateGraph(graph).get(rotation.id)?.outputs.m?.toString()).toBe('[0, -1] [1, 0]')
+  })
+
+  it('keeps irrational entries exact', () => {
+    const { graph, rotation } = rotationScene('pi/6')
+    expect(evaluateGraph(graph).get(rotation.id)?.outputs.m?.toString()).toBe(
+      '[sqrt(3)/2, -1/2] [1/2, sqrt(3)/2]',
+    )
+  })
+
+  it('drives a downstream matrix widget', () => {
+    let graph = addNode(createGraph(), 'rotation', 0, 0)
+    graph = addNode(graph, 'matrix', 200, 0)
+    const [rotation, matrix] = graph.nodes
+    graph = updateRotationData(graph, rotation.id, { angle: 'pi/3' })
+    graph = connect(graph, { node: rotation.id, port: 'm' }, { node: matrix.id, port: MATRIX_INPUT_PORT })
+
+    expect(evaluateGraph(graph).get(matrix.id)?.outputs.m?.toString()).toBe('[1/2, -sqrt(3)/2] [sqrt(3)/2, 1/2]')
+  })
+
+  it('falls back to the identity for an unknown angle', () => {
+    const { graph, rotation } = rotationScene('tau')
+    expect(evaluateGraph(graph).get(rotation.id)?.outputs.m?.toString()).toBe('[1, 0] [0, 1]')
   })
 })

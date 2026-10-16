@@ -107,5 +107,7 @@ describe('labels', () => {
     expect(portLabelKey('matrixMultiply', 'left')).toBe('widget.matrixMultiply.port.left')
     expect(portLabelKey('matrixMultiply', 'right')).toBe('widget.matrixMultiply.port.right')
     expect(portLabelKey('matrixMultiply', 'product')).toBe('widget.matrixMultiply.port.product')
+    expect(WIDGET_TITLE_KEY.rotation).toBe('widget.rotation.title')
+    expect(portLabelKey('rotation', 'm')).toBe('widget.rotation.port.m')
   })
 })

@@ -20,6 +20,7 @@ import { MultiplyNode } from './components/nodes/MultiplyNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
 import { VectorCanvasNode } from './components/nodes/VectorCanvasNode'
+import { RotationNode } from './components/nodes/RotationNode'
 import type { FlowNode } from './components/flowTypes'
 import { reconcileEdges, reconcileNodes } from './components/flowSync'
 import { useI18n } from './i18n/context'
@@ -32,11 +33,12 @@ import {
   moveNode,
   removeNode,
   updateMatrixData,
+  updateRotationData,
   updateScalarData,
   updateVectorCanvasData,
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
-import type { Graph, MatrixNodeData, NodeId, VectorCanvasNodeData, WidgetKind } from './graph/types'
+import type { Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -44,6 +46,7 @@ const NODE_TYPES = {
   scalar: ScalarNode,
   scalarMultiply: ScalarMultiplyNode,
   vectorCanvas: VectorCanvasNode,
+  rotation: RotationNode,
 }
 
 /** Demo scene: A × B with both factors editable. */
@@ -143,6 +146,7 @@ export default function App() {
       updateScalar: (id: NodeId, value: string) => setGraph(current => updateScalarData(current, id, value)),
       updateVectorCanvas: (id: NodeId, data: VectorCanvasNodeData) =>
         setGraph(current => updateVectorCanvasData(current, id, data)),
+      updateRotation: (id: NodeId, data: RotationNodeData) => setGraph(current => updateRotationData(current, id, data)),
       removeNode: (id: NodeId) => setGraph(current => removeNode(current, id)),
     }),
     [],
@@ -178,6 +182,9 @@ export default function App() {
           </button>
           <button className="btn" onClick={() => addWidget('vectorCanvas')}>
             {t('toolbar.addVectorCanvas')}
+          </button>
+          <button className="btn" onClick={() => addWidget('rotation')}>
+            {t('toolbar.addRotation')}
           </button>
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}

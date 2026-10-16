@@ -41,6 +41,7 @@ export const en = {
   'toolbar.addScalar': '+ Scalar',
   'toolbar.addScalarMultiply': '+ Scalar Multiply',
   'toolbar.addVectorCanvas': '+ Vector Canvas',
+  'toolbar.addRotation': '+ Rotation',
   'toolbar.reset': 'Reset',
   'toolbar.hint':
     'drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove',
@@ -50,6 +51,7 @@ export const en = {
   'widget.scalar.title': 'Scalar',
   'widget.scalarMultiply.title': 'Scalar multiply',
   'widget.vectorCanvas.title': 'Vector canvas',
+  'widget.rotation.title': '2D Rotation matrix',
   'widget.remove': 'Remove widget',
 
   'widget.matrix.port.in': 'in',
@@ -62,6 +64,7 @@ export const en = {
   'widget.scalarMultiply.port.scalar': 'Scalar',
   'widget.scalarMultiply.port.product': 'Product',
   'widget.vectorCanvas.port.m': 'matrix',
+  'widget.rotation.port.m': 'matrix',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -87,6 +90,7 @@ export const en = {
   'vectorCanvas.count': 'vectors: {count}',
   'vectorCanvas.error.dim': 'Vector canvas needs 2 columns (or 2 rows), got {rows}×{cols}',
   'vectorCanvas.error.type': 'Waiting for a 2D matrix (each vector has 2 components)',
+  'rotation.angle': 'Angle',
   'conjunction.and': 'and',
 
   'error.cycle': 'Cycle detected',
@@ -107,6 +111,7 @@ export const ru: Messages = {
   'toolbar.addScalar': '+ Скаляр',
   'toolbar.addScalarMultiply': '+ Умножение на скаляр',
   'toolbar.addVectorCanvas': '+ Векторный холст',
+  'toolbar.addRotation': '+ Поворот',
   'toolbar.reset': 'Сброс',
   'toolbar.hint':
     'перетаскивайте виджеты, чтобы двигать · перетащите слот на другой, чтобы соединить · щёлкните провод или нажмите ⌫, чтобы удалить',
@@ -116,6 +121,7 @@ export const ru: Messages = {
   'widget.scalar.title': 'Скаляр',
   'widget.scalarMultiply.title': 'Умножение на скаляр',
   'widget.vectorCanvas.title': 'Векторный холст',
+  'widget.rotation.title': 'Матрица поворота 2D',
   'widget.remove': 'Удалить виджет',
 
   'widget.matrix.port.in': 'вход',
@@ -128,6 +134,7 @@ export const ru: Messages = {
   'widget.scalarMultiply.port.scalar': 'Скаляр',
   'widget.scalarMultiply.port.product': 'Произведение',
   'widget.vectorCanvas.port.m': 'матрица',
+  'widget.rotation.port.m': 'матрица',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -153,6 +160,7 @@ export const ru: Messages = {
   'vectorCanvas.count': 'векторов: {count}',
   'vectorCanvas.error.dim': 'Нужна матрица 2×n или n×2, получено {rows}×{cols}',
   'vectorCanvas.error.type': 'Ожидание матрицы размерности 2D (каждый вектор — 2 компоненты)',
+  'rotation.angle': 'Угол',
   'conjunction.and': 'и',
 
   'error.cycle': 'Обнаружен цикл',

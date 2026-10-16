@@ -1,6 +1,6 @@
 import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
-import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, defaultVectorCanvasData, evaluateNode } from './widgets'
+import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, defaultVectorCanvasData, defaultRotationData, evaluateNode } from './widgets'
 import type {
   Connection,
   Evaluation,
@@ -9,6 +9,7 @@ import type {
   MatrixNodeData,
   NodeId,
   PortRef,
+  RotationNodeData,
   VectorCanvasNodeData,
   WidgetKind,
 } from './types'
@@ -30,7 +31,9 @@ export function addNode(graph: Graph, kind: WidgetKind, x: number, y: number): G
         ? { id, kind, x, y, data: defaultScalarData() }
         : kind === 'vectorCanvas'
           ? { id, kind, x, y, data: defaultVectorCanvasData() }
-          : { id, kind, x, y }
+          : kind === 'rotation'
+            ? { id, kind, x, y, data: defaultRotationData() }
+            : { id, kind, x, y }
   return { nodes: [...graph.nodes, node], connections: graph.connections }
 }
 
@@ -70,6 +73,14 @@ export function updateVectorCanvasData(graph: Graph, id: NodeId, data: VectorCan
   return {
     ...graph,
     nodes: graph.nodes.map(node => (node.id === id && node.kind === 'vectorCanvas' ? { ...node, data } : node)),
+  }
+}
+
+/** Picks the angle of a rotation source (a key into `COS_SIN_TABLE`). */
+export function updateRotationData(graph: Graph, id: NodeId, data: RotationNodeData): Graph {
+  return {
+    ...graph,
+    nodes: graph.nodes.map(node => (node.id === id && node.kind === 'rotation' ? { ...node, data } : node)),
   }
 }
 

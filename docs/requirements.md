@@ -204,6 +204,21 @@ unaffected.
 
 ---
 
+## R9 — Rotation source widget
+
+- A **source**: no input slot, one output slot (`matrix`) that always carries a
+  value; it starts at angle `0` (the identity).
+- A **dropdown inside the widget** lists the basic angles — `0` and the
+  multiples of `π/6` and `π/4` in `[0, 2π)`, each appearing once — written with
+  the `π` letter (`π/6`, `11π/6`, …).
+- Selecting an angle emits the exact 2D **rotation matrix**
+  `[[cos θ, -sin θ], [sin θ, cos θ]]`, taken from a lookup table of exact
+  `[cos, sin]` pairs (see R2), so the value path stays exact.
+- An angle the table does not know (e.g. from corrupt saved data) falls back to
+  the identity rather than failing.
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |

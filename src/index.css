@@ -475,6 +475,26 @@ body {
   font-size: 8.5px;
 }
 
+/* ---------- rotation source ---------- */
+
+.angle-select {
+  height: 28px;
+  padding: 0 6px;
+  background: var(--cell-bg);
+  border: 1px solid var(--node-border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.angle-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 /* ---------- TeX (read-only values) ---------- */
 
 .tex {

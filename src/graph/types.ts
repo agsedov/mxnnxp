@@ -2,7 +2,7 @@ import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 
 export type NodeId = string
-export type WidgetKind = 'matrix' | 'matrixMultiply' | 'scalar' | 'scalarMultiply' | 'vectorCanvas'
+export type WidgetKind = 'matrix' | 'matrixMultiply' | 'scalar' | 'scalarMultiply' | 'vectorCanvas' | 'rotation'
 export type PortDirection = 'input' | 'output'
 
 /** A reference to a slot ("port") on a widget. */
@@ -66,7 +66,20 @@ export interface VectorCanvasWidget {
   data: VectorCanvasNodeData
 }
 
-export type GraphNode = MatrixWidget | MatrixMultiplyWidget | ScalarWidget | ScalarMultiplyWidget | VectorCanvasWidget
+/** A 2D rotation source: the angle is a key into `COS_SIN_TABLE` (`'pi/6'`, ...). */
+export interface RotationNodeData {
+  angle: string
+}
+
+export interface RotationWidget {
+  id: NodeId
+  kind: 'rotation'
+  x: number
+  y: number
+  data: RotationNodeData
+}
+
+export type GraphNode = MatrixWidget | MatrixMultiplyWidget | ScalarWidget | ScalarMultiplyWidget | VectorCanvasWidget | RotationWidget
 
 export interface Connection {
   id: string
