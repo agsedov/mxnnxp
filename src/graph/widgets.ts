@@ -56,6 +56,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [],
     outputs: [{ id: 'm' }],
   },
+  rowEchelon: {
+    kind: 'rowEchelon',
+    inputs: [{ id: 'm' }],
+    outputs: [{ id: 'ref' }],
+  },
 }
 
 export function defaultMatrixData(): MatrixNodeData {
@@ -142,6 +147,12 @@ export function evaluateNode(
         Array.from({ length: matrix.cols }, (_, j) => matrix.get(i, j).mul(s)),
       )
       return { outputs: { product: Matrix.fromRows(data) }, error: null }
+    }
+    case 'rowEchelon': {
+      const matrix = inputs.m ?? null
+      // Any matrix has a row echelon form, so this widget never errors —
+      // it simply waits until a value arrives on its input.
+      return { outputs: { ref: matrix ? Matrix.rowEchelon(matrix) : null }, error: null }
     }
   }
 }

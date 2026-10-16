@@ -378,3 +378,53 @@ describe('rotation widget', () => {
     expect(evaluateGraph(graph).get(rotation.id)?.outputs.m?.toString()).toBe('[1, 0] [0, 1]')
   })
 })
+
+describe('row echelon widget', () => {
+  /** A matrix widget wired into a row echelon widget. */
+  function refScene(cells: string[][]) {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'rowEchelon', 200, 0)
+    const [matrix, ref] = graph.nodes
+    graph = setMatrixCells(graph, matrix.id, cells)
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: ref.id, port: 'm' })
+    return { graph, ref }
+  }
+
+  it('emits the row echelon form of the incoming matrix', () => {
+    const { graph, ref } = refScene([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    const result = evaluateGraph(graph).get(ref.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.ref?.toString()).toBe('[1, 2] [0, -2]')
+  })
+
+  it('swaps rows and keeps pivots unscaled, exactly', () => {
+    const { graph, ref } = refScene([
+      ['0', '1', '1'],
+      ['2', '3', '1'],
+      ['4', '5', '1'],
+    ])
+    // Rows 0↔1 swap in the pivot; 2 stays 2 (not normalized to 1); the last
+    // row eliminates to all zeros and sinks to the bottom.
+    expect(evaluateGraph(graph).get(ref.id)?.outputs.ref?.toString()).toBe('[2, 3, 1] [0, 1, 1] [0, 0, 0]')
+  })
+
+  it('keeps radical entries exact through elimination', () => {
+    const { graph, ref } = refScene([
+      ['sqrt(2)', '1'],
+      ['1', '1'],
+    ])
+    expect(evaluateGraph(graph).get(ref.id)?.outputs.ref?.toString()).toBe('[sqrt(2), 1] [0, 1 - sqrt(2)/2]')
+  })
+
+  it('waits quietly while the input carries no value', () => {
+    const graph = addNode(createGraph(), 'rowEchelon', 0, 0)
+    const ref = graph.nodes[0]
+    const result = evaluateGraph(graph).get(ref.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.ref).toBeNull()
+  })
+})

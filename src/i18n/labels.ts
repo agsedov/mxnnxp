@@ -13,6 +13,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   scalarMultiply: 'widget.scalarMultiply.title',
   vectorCanvas: 'widget.vectorCanvas.title',
   rotation: 'widget.rotation.title',
+  rowEchelon: 'widget.rowEchelon.title',
 }
 
 const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
@@ -38,6 +39,10 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
   },
   rotation: {
     m: 'widget.rotation.port.m',
+  },
+  rowEchelon: {
+    m: 'widget.rowEchelon.port.m',
+    ref: 'widget.rowEchelon.port.ref',
   },
 }
 

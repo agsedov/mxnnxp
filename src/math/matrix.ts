@@ -90,6 +90,45 @@ export class Matrix<T extends Scalar<T>> {
     return new Matrix(a.rows, b.cols, data)
   }
 
+  /**
+   * Row echelon form by exact Gaussian elimination, over any exact field.
+   *
+   * Rows are swapped up when a pivot position holds a zero, everything below a
+   * pivot is eliminated exactly (entries left of a pivot become exact zeros,
+   * not approximations), and all-zero rows sink to the bottom.
+   *
+   * Pivot rows are **never scaled to a leading 1**: the pivots stay whatever
+   * elimination produced them as. Each elimination step preserves the
+   * determinant and each row swap flips its sign, so the product of the
+   * pivots — up to the swaps' parity — is the determinant of the input, which
+   * is what a future determinant wants to read off this form.
+   */
+  static rowEchelon<T extends Scalar<T>>(matrix: Matrix<T>): Matrix<T> {
+    const rows = matrix.data.map(row => [...row])
+    let pivotRow = 0
+    for (let col = 0; col < matrix.cols && pivotRow < matrix.rows; col++) {
+      let pivot = pivotRow
+      while (pivot < matrix.rows && rows[pivot][col].isZero()) {
+        pivot++
+      }
+      if (pivot === matrix.rows) continue // whole column is zero below the pivots so far
+      if (pivot !== pivotRow) {
+        ;[rows[pivot], rows[pivotRow]] = [rows[pivotRow], rows[pivot]]
+      }
+      const pivotValue = rows[pivotRow][col]
+      for (let row = pivotRow + 1; row < matrix.rows; row++) {
+        const factor = rows[row][col].div(pivotValue)
+        if (factor.isZero()) continue
+        // Columns left of `col` are already exact zeros in this row, so start at `col`.
+        for (let c = col; c < matrix.cols; c++) {
+          rows[row][c] = rows[row][c].sub(factor.mul(rows[pivotRow][c]))
+        }
+      }
+      pivotRow++
+    }
+    return Matrix.fromRows(rows)
+  }
+
   toString(): string {
     return this.data.map(row => `[${row.join(', ')}]`).join(' ')
   }

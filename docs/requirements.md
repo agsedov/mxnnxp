@@ -248,6 +248,24 @@ unaffected.
 
 ---
 
+## R11 — Row echelon form widget
+
+- One **input slot** (`matrix`); one **output slot** (`Row echelon form`) that
+  carries the row echelon form of the incoming matrix.
+- The form is computed by exact Gaussian elimination over the incoming entries
+  (see R2): rows are swapped up when a pivot position holds a zero, everything
+  below a pivot is eliminated exactly, and all-zero rows sink to the bottom.
+- **Pivot rows are never scaled to a leading 1** — the pivots stay whatever
+  elimination produced, so the form keeps the determinant readable off its
+  diagonal (product of the pivots, up to the row swaps' sign) for a future
+  determinant widget.
+- Any matrix has a row echelon form, so the widget never errors on content; it
+  waits quietly (no error) while the input carries no value and shows only the
+  result's shape — the values themselves are shown by whatever widget the
+  output is connected to (see R4).
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |

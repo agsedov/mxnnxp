@@ -49,6 +49,7 @@ export const en = {
   'widget.scalarMultiply.title': 'Scalar multiply',
   'widget.vectorCanvas.title': 'Vector canvas',
   'widget.rotation.title': '2D Rotation matrix',
+  'widget.rowEchelon.title': 'Row echelon form',
   'widget.remove': 'Remove widget',
 
   'widget.matrix.port.in': 'in',
@@ -62,6 +63,8 @@ export const en = {
   'widget.scalarMultiply.port.product': 'Product',
   'widget.vectorCanvas.port.m': 'matrix',
   'widget.rotation.port.m': 'matrix',
+  'widget.rowEchelon.port.m': 'matrix',
+  'widget.rowEchelon.port.ref': 'Row echelon form',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -78,6 +81,7 @@ export const en = {
   'multiply.noValue': 'no value yet',
   'scalar.error': 'not a valid exact number',
   'scalarMultiply.waiting': 'waiting for {ports}',
+  'rowEchelon.waiting': 'waiting for {ports}',
   'vectorCanvas.mode.label': 'Mode',
   'vectorCanvas.mode.rows': 'Rows as vectors (2D)',
   'vectorCanvas.mode.cols': 'Columns as vectors (2D)',
@@ -116,6 +120,7 @@ export const ru: Messages = {
   'widget.scalarMultiply.title': 'Умножение на скаляр',
   'widget.vectorCanvas.title': 'Векторный холст',
   'widget.rotation.title': 'Матрица поворота 2D',
+  'widget.rowEchelon.title': 'Ступенчатый вид',
   'widget.remove': 'Удалить виджет',
 
   'widget.matrix.port.in': 'вход',
@@ -129,6 +134,8 @@ export const ru: Messages = {
   'widget.scalarMultiply.port.product': 'Произведение',
   'widget.vectorCanvas.port.m': 'матрица',
   'widget.rotation.port.m': 'матрица',
+  'widget.rowEchelon.port.m': 'матрица',
+  'widget.rowEchelon.port.ref': 'Ступенчатый вид',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -145,6 +152,7 @@ export const ru: Messages = {
   'multiply.noValue': 'пока нет значения',
   'scalar.error': 'недопустимое точное число',
   'scalarMultiply.waiting': 'ожидание: {ports}',
+  'rowEchelon.waiting': 'ожидание: {ports}',
   'vectorCanvas.mode.label': 'Режим',
   'vectorCanvas.mode.rows': 'Строки как векторы (2D)',
   'vectorCanvas.mode.cols': 'Столбцы как векторы (2D)',

@@ -2,7 +2,14 @@ import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
 
 export type NodeId = string
-export type WidgetKind = 'matrix' | 'matrixMultiply' | 'scalar' | 'scalarMultiply' | 'vectorCanvas' | 'rotation'
+export type WidgetKind =
+  | 'matrix'
+  | 'matrixMultiply'
+  | 'scalar'
+  | 'scalarMultiply'
+  | 'vectorCanvas'
+  | 'rotation'
+  | 'rowEchelon'
 export type PortDirection = 'input' | 'output'
 
 /** A reference to a slot ("port") on a widget. */
@@ -79,7 +86,22 @@ export interface RotationWidget {
   data: RotationNodeData
 }
 
-export type GraphNode = MatrixWidget | MatrixMultiplyWidget | ScalarWidget | ScalarMultiplyWidget | VectorCanvasWidget | RotationWidget
+/** A transform that emits the row echelon form of the matrix on its input. */
+export interface RowEchelonWidget {
+  id: NodeId
+  kind: 'rowEchelon'
+  x: number
+  y: number
+}
+
+export type GraphNode =
+  | MatrixWidget
+  | MatrixMultiplyWidget
+  | ScalarWidget
+  | ScalarMultiplyWidget
+  | VectorCanvasWidget
+  | RotationWidget
+  | RowEchelonWidget
 
 export interface Connection {
   id: string

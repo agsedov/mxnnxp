@@ -131,6 +131,8 @@ function parseNode(value: unknown, where: string): GraphNode {
       const data = asRecord(record.data, `${where}.data`)
       return { id, kind: widgetKind, x, y, data: { angle: asString(data.angle, `${where}.data.angle`) } }
     }
+    case 'rowEchelon':
+      return { id, kind: widgetKind, x, y }
     case 'matrixMultiply':
     case 'scalarMultiply':
       return { id, kind: widgetKind, x, y }

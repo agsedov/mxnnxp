@@ -7,6 +7,7 @@ import { WIDGET_TITLE_KEY } from '../i18n/labels'
 const ADDABLE_WIDGETS: readonly WidgetKind[] = [
   'matrix',
   'matrixMultiply',
+  'rowEchelon',
   'scalar',
   'scalarMultiply',
   'vectorCanvas',

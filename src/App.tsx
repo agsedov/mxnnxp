@@ -18,6 +18,7 @@ import { GraphActionsContext } from './components/GraphActionsContext'
 import { LanguageSwitch } from './components/LanguageSwitch'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
+import { RowEchelonNode } from './components/nodes/RowEchelonNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
 import { VectorCanvasNode } from './components/nodes/VectorCanvasNode'
@@ -49,6 +50,7 @@ const NODE_TYPES = {
   scalarMultiply: ScalarMultiplyNode,
   vectorCanvas: VectorCanvasNode,
   rotation: RotationNode,
+  rowEchelon: RowEchelonNode,
 }
 
 /** Demo scene: A × B with both factors editable. */

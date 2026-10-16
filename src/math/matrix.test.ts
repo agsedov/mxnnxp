@@ -78,6 +78,77 @@ describe('Matrix.multiply', () => {
   })
 })
 
+describe('Matrix.rowEchelon', () => {
+  it('eliminates below the pivot, keeping the pivot as computed', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    expect(Matrix.rowEchelon(m).toString()).toBe('[1, 2] [0, -2]')
+  })
+
+  it('keeps pivots unscaled (1/2 stays 1/2, not 1)', () => {
+    const m = grid([
+      ['1/2', '1/3'],
+      ['1', '1'],
+    ])
+    expect(Matrix.rowEchelon(m).toString()).toBe('[1/2, 1/3] [0, 1/3]')
+  })
+
+  it('swaps in a nonzero row when the pivot position holds zero', () => {
+    const m = grid([
+      ['0', '2'],
+      ['1', '3'],
+    ])
+    expect(Matrix.rowEchelon(m).toString()).toBe('[1, 3] [0, 2]')
+  })
+
+  it('sinks an all-zero row to the bottom', () => {
+    const m = grid([
+      ['2', '4'],
+      ['1', '2'],
+    ])
+    expect(Matrix.rowEchelon(m).toString()).toBe('[2, 4] [0, 0]')
+  })
+
+  it('steps pivots right over columns that are zero below them', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['0', '0', '1'],
+      ['0', '0', '2'],
+    ])
+    expect(Matrix.rowEchelon(m).toString()).toBe('[1, 2, 3] [0, 0, 1] [0, 0, 0]')
+  })
+
+  it('keeps irrational and complex entries exact', () => {
+    expect(
+      Matrix.rowEchelon(
+        grid([
+          ['sqrt(2)', '2'],
+          ['1', '3'],
+        ]),
+      ).toString(),
+    ).toBe('[sqrt(2), 2] [0, 3 - sqrt(2)]')
+    expect(
+      Matrix.rowEchelon(
+        grid([
+          ['i', '1'],
+          ['1', 'i'],
+        ]),
+      ).toString(),
+    ).toBe('[i, 1] [0, 2*i]')
+  })
+
+  it('leaves the input matrix untouched', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    Matrix.rowEchelon(m)
+    expect(m.toString()).toBe('[1, 2] [3, 4]')
+  })
+})
+
 describe('Matrix.toLatex', () => {
   it('renders a parenthesised matrix with fractions', () => {
     const matrix = Matrix.fromRows([

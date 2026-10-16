@@ -22,6 +22,10 @@ the graph.
   (`0`, `π/6`, `π/4`, …). Picking one emits the exact 2D rotation matrix
   `[[cos, -sin], [sin, cos]]` for it, read from a lookup table of exact cos/sin
   pairs — no approximation enters the value path.
+- **Row echelon form widget** — takes a matrix and emits its row echelon form:
+  exact Gaussian elimination over the exact number tower, with row swaps where
+  the pivot position holds a zero and the pivots kept unscaled. Connect the
+  output to a matrix widget to display the result.
 - **Exact numbers** — all values are exact, never floating point. The math layer
   implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
   `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as
