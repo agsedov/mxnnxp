@@ -58,6 +58,7 @@ npm run dev      # start dev server
 npm test         # run engine/math tests
 npm run build    # type-check + production build
 npm run lint     # oxlint
+npm run bundle   # production build + zip for the deploy server
 ```
 
 With the dev server running, `npm run smoke` renders the app headlessly
@@ -67,6 +68,24 @@ input's rows/columns and switches mode (including its shape and complex-value
 errors), that dragging a widget redraws continuously without blanking the
 canvas, that the language switch works, and writes a screenshot to
 `/tmp/opencode/smoke.png`.
+
+## Deploy
+
+`npm run bundle` runs the production build with Vite's `base` set to
+`/mxnnxp/` (so the page requests `/mxnnxp/assets/…`), then zips the result to
+`release/mxnnxp-<date>-<sha>.zip` — a zip whose entries start with the
+`mxnnxp/` directory, i.e. the layout below `/var/www/html/`.
+
+```bash
+scp release/mxnnxp-*.zip user@server:/tmp/
+ssh user@server "sudo unzip -o /tmp/mxnnxp-*.zip -d /var/www/html/ && \
+  sudo chown -R www-data:www-data /var/www/html/mxnnxp"
+```
+
+Apache on Ubuntu then serves it at `https://<host>/mxnnxp/` from the default
+`DocumentRoot`. No modules or rewrites are involved: the canvas state lives in
+the URL's hash fragment, so every request names a real file. Build with
+`BASE_PATH=/ npm run bundle` instead if the app is served from a host root.
 
 ## Layout
 
