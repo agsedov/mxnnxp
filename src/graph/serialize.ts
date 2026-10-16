@@ -67,8 +67,8 @@ export async function tryDeserializeGraph(encoded: string): Promise<Graph | null
 }
 
 /** Inflates the payload's bytes and reads them back as UTF-8 text. */
-async function inflateToText(bytes: Uint8Array): Promise<string> {
-  let inflated: Uint8Array
+async function inflateToText(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  let inflated: Uint8Array<ArrayBuffer>
   try {
     inflated = await inflate(bytes)
   } catch {
@@ -225,16 +225,29 @@ function asInteger(value: unknown, where: string): number {
  * implements, browsers and Node alike. Its six-byte wrapper is irrelevant next
  * to the savings on a repetitive payload.
  */
-function deflate(bytes: Uint8Array): Promise<Uint8Array> {
+function deflate(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
   return pump(bytes, new CompressionStream('deflate'))
 }
 
 /** Reverses {@link deflate}; rejects when the bytes are not a deflate stream. */
-function inflate(bytes: Uint8Array): Promise<Uint8Array> {
+function inflate(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
   return pump(bytes, new DecompressionStream('deflate'))
 }
 
-async function pump(bytes: Uint8Array, transform: TransformStream<BufferSource, Uint8Array>): Promise<Uint8Array> {
+/**
+ * Pumps bytes through a stream transform.
+ *
+ * The bytes are typed `Uint8Array<ArrayBuffer>`, not the default
+ * `Uint8Array<ArrayBufferLike>`: `BlobPart` does not take a view that might be
+ * backed by a `SharedArrayBuffer`, and every payload here is built by this
+ * module or by `TextEncoder`/`Response` — all of them own their buffer. Typing
+ * it this way keeps `new Blob([bytes])` honest instead of casting a
+ * possibly-shared view into a `BlobPart`.
+ */
+async function pump(
+  bytes: Uint8Array<ArrayBuffer>,
+  transform: TransformStream<BufferSource, Uint8Array>,
+): Promise<Uint8Array<ArrayBuffer>> {
   const stream = new Blob([bytes]).stream().pipeThrough(transform)
   return new Uint8Array(await new Response(stream).arrayBuffer())
 }
@@ -260,7 +273,7 @@ function toBase64Url(bytes: Uint8Array): string {
   return encoded
 }
 
-function fromBase64Url(encoded: string): Uint8Array {
+function fromBase64Url(encoded: string): Uint8Array<ArrayBuffer> {
   const bytes: number[] = []
   let buffer = 0
   let bits = 0

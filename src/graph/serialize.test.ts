@@ -65,7 +65,7 @@ function base64Url(bytes: Uint8Array): string {
  * Deflates bytes and base64url-encodes them — the wire format `serializeGraph`
  * emits — so tests can hand-build payloads without using the codec under test.
  */
-async function encodeBytes(bytes: Uint8Array): Promise<string> {
+async function encodeBytes(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'))
   const deflated = new Uint8Array(await new Response(stream).arrayBuffer())
   return base64Url(deflated)
