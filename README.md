@@ -35,6 +35,11 @@ the graph.
   step. A `?lang=ru` (or `?lang=en`) query parameter forces the language for that
   load. Translations live in `src/i18n/`; the graph engine itself stays
   locale-free and reports structured errors the UI renders per language.
+- **Shareable links** — *Share link* copies a URL that reopens the canvas with
+  the same widgets, their content, positions and wires. The graph rides in the
+  URL fragment (`#g=<base64url>`), so opening such a link rebuilds the scene and
+  recomputes every value exactly; a link with no valid graph falls back to the
+  demo scene. See `src/graph/serialize.ts`.
 
 ## Stack
 
@@ -67,9 +72,10 @@ canvas, that the language switch works, and writes a screenshot to
 
 ```
 src/math/        the exact/ number tower and the generic Matrix<T> over it — pure, immutable, tested
-src/graph/       widget specs, connection rules, topological evaluation, structured errors — pure, tested
+src/graph/       widget specs, connection rules, topological evaluation, structured errors, graph serialization — pure, tested
 src/i18n/        English/Russian catalogue, provider + useI18n, label and error text
 src/components/  React Flow canvas, widget components, TeX rendering, graph ⇄ canvas sync
+src/share.ts     URL fragment plumbing for shareable links (graph ↔ `#g=`)
 docs/            requirements (incl. the TeX update-cycle policy)
 ```
 

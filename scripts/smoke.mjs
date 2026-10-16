@@ -331,6 +331,62 @@ await page.goto(`${BASE}/?lang=ru`, { waitUntil: 'networkidle' })
 await page.waitForSelector('.react-flow__node', { timeout: 15000 })
 await page.screenshot({ path: '/tmp/opencode/smoke.png' })
 
+// --- Shareable link: the toolbar button copies a URL that reopens the canvas,
+// and opening such a link restores the widgets with their content and wiring.
+const errorsBeforeShare = errors.length
+await page.goto(BASE, { waitUntil: 'networkidle' })
+await page.waitForSelector('.cell', { timeout: 15000 })
+
+// Make the scene distinctive, then snapshot it into a link.
+await page.locator('.cell').first().fill('7/9')
+await page.waitForTimeout(200)
+await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+await page.getByRole('button', { name: 'Share link' }).click()
+await page.waitForTimeout(150)
+const sharedLink = await page.evaluate(() => navigator.clipboard.readText())
+const share = {
+  hasFragment: sharedLink.includes('#g='),
+  base: sharedLink.split('#')[0],
+}
+await page.goto(sharedLink, { waitUntil: 'networkidle' })
+await page.waitForSelector('.cell', { timeout: 15000 })
+share.nodes = await page.locator('.react-flow__node').count()
+share.edges = await edgeCount()
+share.firstCell = await page.locator('.cell').first().inputValue()
+
+// A hand-written payload (the same wire format) must reopen those exact
+// widgets, their cells and their wires.
+const golden = Buffer.from(
+  JSON.stringify({
+    v: 1,
+    nodes: [
+      { id: 'g1', kind: 'matrix', x: 80, y: 80, data: { rows: 1, cols: 2, cells: [['1/3', 'sqrt(2)']] } },
+      { id: 'g2', kind: 'matrix', x: 480, y: 80, data: { rows: 2, cols: 1, cells: [['1'], ['0']] } },
+      { id: 'g3', kind: 'matrixMultiply', x: 260, y: 320 },
+    ],
+    connections: [
+      { id: 'w1', from: { node: 'g1', port: 'm' }, to: { node: 'g3', port: 'left' } },
+      { id: 'w2', from: { node: 'g2', port: 'm' }, to: { node: 'g3', port: 'right' } },
+    ],
+  }),
+  'utf8',
+).toString('base64url')
+
+await page.goto(`${BASE}/#g=${golden}`, { waitUntil: 'networkidle' })
+await page.waitForSelector('.cell', { timeout: 15000 })
+const goldenLink = {
+  nodes: await page.locator('.react-flow__node').count(),
+  edges: await edgeCount(),
+  firstCell: await page.locator('.react-flow__node[data-id="g1"] .cell').first().inputValue(),
+  secondCell: await page.locator('.react-flow__node[data-id="g1"] .cell').nth(1).inputValue(),
+}
+
+// A broken link falls back to the demo scene rather than a blank page.
+await page.goto(`${BASE}/#g=not-a-graph`, { waitUntil: 'networkidle' })
+await page.waitForSelector('.react-flow__node', { timeout: 15000 })
+goldenLink.corruptFallbackNodes = await page.locator('.react-flow__node').count()
+goldenLink.errors = errors.slice(errorsBeforeShare)
+
 await browser.close()
 
 const report = {
@@ -356,6 +412,8 @@ const report = {
   },
   locale,
   forced,
+  share,
+  goldenLink,
   errors,
 }
 console.log(JSON.stringify(report, null, 2))
@@ -426,5 +484,16 @@ const failed =
   forced.stored !== 'en' ||
   forced.invalidParamLang !== 'en' ||
   forced.errors.length > 0 ||
+  !share.hasFragment ||
+  share.base !== `${BASE}/` ||
+  share.nodes !== 3 ||
+  share.edges !== 2 ||
+  share.firstCell !== '7/9' ||
+  goldenLink.nodes !== 3 ||
+  goldenLink.edges !== 2 ||
+  goldenLink.firstCell !== '1/3' ||
+  goldenLink.secondCell !== 'sqrt(2)' ||
+  goldenLink.corruptFallbackNodes !== 3 ||
+  goldenLink.errors.length > 0 ||
   errors.length > 0
 process.exit(failed ? 1 : 0)

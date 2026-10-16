@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   applyEdgeChanges,
   applyNodeChanges,
@@ -39,6 +39,7 @@ import {
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
 import type { Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
+import { graphFromHash, shareUrl } from './share'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -61,9 +62,15 @@ function createInitialGraph(): Graph {
   return graph
 }
 
+/** The graph to open with: a shared one from the URL, else the demo scene. */
+function openingGraph(): Graph {
+  return graphFromHash(window.location.hash) ?? createInitialGraph()
+}
+
 export default function App() {
   const { t } = useI18n()
-  const [graph, setGraph] = useState<Graph>(createInitialGraph)
+  const [graph, setGraph] = useState<Graph>(openingGraph)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
 
@@ -163,6 +170,37 @@ export default function App() {
     setGraph(createInitialGraph())
   }, [])
 
+  // Copy a link that reopens the canvas exactly as it is now (widgets, their
+  // content, positions and wires). If the clipboard is unavailable, fall back to
+  // putting the link in the address bar so it can still be copied by hand.
+  const share = useCallback(async () => {
+    const url = shareUrl(window.location.href, graph)
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      window.history.replaceState(null, '', url)
+    }
+    setLinkCopied(true)
+  }, [graph])
+
+  useEffect(() => {
+    if (!linkCopied) return
+    const timer = window.setTimeout(() => setLinkCopied(false), 1600)
+    return () => window.clearTimeout(timer)
+  }, [linkCopied])
+
+  // Opening a shared link in an already-open tab is only a fragment change, so
+  // the page does not reload — restore the linked graph (or keep the current one
+  // if the fragment carries no valid graph).
+  useEffect(() => {
+    const onHashChange = () => {
+      const shared = graphFromHash(window.location.hash)
+      if (shared) setGraph(shared)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
   return (
     <div className="app">
       <GraphActionsContext.Provider value={graphActions}>
@@ -188,6 +226,9 @@ export default function App() {
           </button>
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}
+          </button>
+          <button className="btn btn-quiet" onClick={share}>
+            {t(linkCopied ? 'toolbar.shareCopied' : 'toolbar.share')}
           </button>
           <span className="hint">{t('toolbar.hint')}</span>
           <LanguageSwitch />

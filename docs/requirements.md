@@ -219,12 +219,38 @@ unaffected.
 
 ---
 
+## R10 — Graph serialization (shareable link)
+
+- The whole editable document — every widget with its **content** and position,
+  plus every wire — serializes to one string that fits in a link (a `#g=…`
+  fragment, so it stays out of server logs).
+- The payload is a **versioned JSON envelope**, UTF-8 encoded and written as
+  **unpadded base64url** (RFC 4648 §5), so it needs no escaping inside a URL.
+- Only the document travels; **values are recomputed** on load, so the same
+  widgets and wires reappear and re-evaluate to the same exact results. Widget
+  and connection ids are preserved so the wiring survives.
+- The app opens with the graph from the `#g=` fragment when there is one — on
+  first load and when the fragment changes in an already-open tab. A link that
+  carries no valid graph falls back to the demo scene, never a blank page.
+- A **Share link** button in the toolbar copies a link to the current canvas
+  (widgets, content, positions and wires). Where the clipboard is unavailable,
+  it puts the link in the address bar instead.
+- Decoding is **strict**: not valid base64url/JSON, another format version, an
+  unknown widget kind or slot, a wire to a missing widget or to itself,
+  duplicate ids, or matrix cells that disagree with the declared size are all
+  rejected with a `GraphSerializationError` — never a half-restored canvas.
+- The helpers are pure and live in the Graph layer: `serializeGraph`,
+  `deserializeGraph` and `tryDeserializeGraph` in `src/graph/serialize.ts`; the
+  URL fragment plumbing (`graphFromHash`, `shareUrl`) is in `src/share.ts`.
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |
 |---|---|---|
 | Math | `src/math/` | exact numbers: the `src/math/exact/` tower (`Rational`, `Algebraic`, `parseExact`), and the generic `Matrix<T extends Scalar<T>>` that carries them — pure, immutable, unit-tested (incl. LaTeX) |
-| Graph | `src/graph/` | widget specs, connection rules, topological evaluation, structured errors — pure, unit-tested |
+| Graph | `src/graph/` | widget specs, connection rules, topological evaluation, structured errors, graph serialization (base64url) — pure, unit-tested |
 | i18n | `src/i18n/` | English/Russian catalogue (`messages.ts`), provider + `useI18n` (`I18nProvider.tsx`, `context.ts`), widget/slot labels and error text (`labels.ts`) |
 | UI | `src/components/` | React Flow (`@xyflow/react`) canvas, custom widget components, graph ⇄ canvas sync (`flowSync.ts`), TeX rendering (`Tex.tsx`) |
 
@@ -254,5 +280,4 @@ State ownership follows React Flow's contract:
   `src/math/exact/scalar.ts`), so algorithms run over any exact field.
 - Characteristic polynomial and spectral/Jordan decomposition, with an explicit
   "not representable in the supported exact tower" state rather than a float.
-- Serialization of graphs (localStorage / shareable URLs).
 - Pan/zoom-aware port markers, keyboard graph navigation.

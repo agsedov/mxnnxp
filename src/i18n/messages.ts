@@ -43,6 +43,8 @@ export const en = {
   'toolbar.addVectorCanvas': '+ Vector Canvas',
   'toolbar.addRotation': '+ Rotation',
   'toolbar.reset': 'Reset',
+  'toolbar.share': 'Share link',
+  'toolbar.shareCopied': 'Link copied',
   'toolbar.hint':
     'drag widgets to move · drag a slot onto another to connect · click a wire or press ⌫ to remove',
 
@@ -113,6 +115,8 @@ export const ru: Messages = {
   'toolbar.addVectorCanvas': '+ Векторный холст',
   'toolbar.addRotation': '+ Поворот',
   'toolbar.reset': 'Сброс',
+  'toolbar.share': 'Ссылка',
+  'toolbar.shareCopied': 'Ссылка скопирована',
   'toolbar.hint':
     'перетаскивайте виджеты, чтобы двигать · перетащите слот на другой, чтобы соединить · щёлкните провод или нажмите ⌫, чтобы удалить',
 
