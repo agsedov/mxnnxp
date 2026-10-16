@@ -7,6 +7,7 @@ import {
   evaluateGraph,
   removeNode,
   updateMatrixData,
+  updateVectorCanvasData,
 } from './engine'
 import { MATRIX_INPUT_PORT, defaultMatrixData } from './widgets'
 import type { Graph, MatrixNodeData } from './types'
@@ -260,5 +261,74 @@ describe('matrix widget input slot', () => {
     const updated = updateMatrixData(freed, driven.id, { rows: 1, cols: 1, cells: [['42']] })
     const node = updated.nodes.find(candidate => candidate.id === driven.id)
     expect(node?.kind === 'matrix' ? node.data.cells[0][0] : null).toBe('42')
+  })
+})
+
+describe('vector canvas widget', () => {
+  /** A canvas fed by a matrix, with the reading mode set explicitly. */
+  function canvasScene(mode: 'rows' | 'cols', cells: string[][]) {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'vectorCanvas', 300, 0)
+    const [matrix, canvas] = graph.nodes
+    graph = setMatrixCells(graph, matrix.id, cells)
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: canvas.id, port: 'm' })
+    graph = updateVectorCanvasData(graph, canvas.id, { mode })
+    return { graph, canvas }
+  }
+
+  it('accepts one 2-component vector per row in rows mode', () => {
+    const { graph, canvas } = canvasScene('rows', [['1', '0'], ['0', '1'], ['1/2', 'sqrt(2)']])
+    const result = evaluateGraph(graph).get(canvas.id)
+    expect(result?.error).toBeNull()
+    // The widget draws from the value the widget saw on its input slot.
+    expect(result?.inputs?.m?.rows).toBe(3)
+    expect(result?.inputs?.m?.cols).toBe(2)
+  })
+
+  it('rejects a shape that does not fit the mode, naming it', () => {
+    const rows = canvasScene('rows', [['1', '2', '3'], ['4', '5', '6']])
+    expect(evaluateGraph(rows.graph).get(rows.canvas.id)?.error).toEqual({
+      code: 'vectorShape',
+      rows: 2,
+      cols: 3,
+      mode: 'rows',
+    })
+
+    const cols = canvasScene('cols', [['1', '2'], ['3', '4'], ['5', '6']])
+    expect(evaluateGraph(cols.graph).get(cols.canvas.id)?.error).toEqual({
+      code: 'vectorShape',
+      rows: 3,
+      cols: 2,
+      mode: 'cols',
+    })
+  })
+
+  it('reads the same matrix by the other orientation once the mode changes', () => {
+    const { graph, canvas } = canvasScene('rows', [['1', '2', '3'], ['4', '5', '6']])
+    expect(evaluateGraph(graph).get(canvas.id)?.error).toMatchObject({ code: 'vectorShape' })
+
+    const flipped = updateVectorCanvasData(graph, canvas.id, { mode: 'cols' })
+    expect(evaluateGraph(flipped).get(canvas.id)?.error).toBeNull()
+  })
+
+  it('rejects complex components with their cell position', () => {
+    const cell = canvasScene('rows', [['1', 'i'], ['0', '1']])
+    expect(evaluateGraph(cell.graph).get(cell.canvas.id)?.error).toEqual({ code: 'complex', row: 1, col: 2 })
+
+    const column = canvasScene('cols', [['1', '2'], ['0', '1 - i']])
+    expect(evaluateGraph(column.graph).get(column.canvas.id)?.error).toEqual({ code: 'complex', row: 2, col: 2 })
+  })
+
+  it('waits quietly while the input carries no value', () => {
+    const graph = addNode(createGraph(), 'vectorCanvas', 0, 0)
+    const result = evaluateGraph(graph).get(graph.nodes[0].id)
+    expect(result?.error).toBeNull()
+    expect(result?.inputs?.m).toBeNull()
+  })
+
+  it('produces no output value on any slot', () => {
+    const { graph, canvas } = canvasScene('rows', [['1', '0'], ['0', '1']])
+    expect(evaluateGraph(graph).get(canvas.id)?.outputs).toEqual({})
   })
 })

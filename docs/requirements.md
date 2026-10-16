@@ -184,6 +184,26 @@ unaffected.
 
 ---
 
+## R8 — Vector canvas widget
+
+- One **input slot** (`matrix`); the widget visualizes only and produces no
+  output.
+- It reads the incoming matrix as a set of **2-component vectors drawn from the
+  origin of a real 2D plane**: in **rows** mode every row is a vector (the
+  matrix must be `m×2`), in **cols** mode every column is one (`2×n`). The
+  reading mode is switched by a control **inside the widget**.
+- Each vector is drawn as an arrow from the origin, on axes with a scaled grid;
+  its tip is labelled with the vector's **exact** components
+  (`(sqrt(2)/2, 1/2)`). The arrow geometry is an approximation for drawing only;
+  the exact labels and the value path stay exact (see R2).
+- A shape that does not fit the active mode is an error naming the received
+  shape; a component with a non-zero imaginary part is an error too, since the
+  plane is real.
+- While the input carries no value the widget waits quietly (no error) and draws
+  nothing.
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |

@@ -33,9 +33,10 @@ import {
   removeNode,
   updateMatrixData,
   updateScalarData,
+  updateVectorCanvasData,
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
-import type { Graph, MatrixNodeData, NodeId, WidgetKind } from './graph/types'
+import type { Graph, MatrixNodeData, NodeId, VectorCanvasNodeData, WidgetKind } from './graph/types'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -140,6 +141,8 @@ export default function App() {
     () => ({
       updateMatrix: (id: NodeId, data: MatrixNodeData) => setGraph(current => updateMatrixData(current, id, data)),
       updateScalar: (id: NodeId, value: string) => setGraph(current => updateScalarData(current, id, value)),
+      updateVectorCanvas: (id: NodeId, data: VectorCanvasNodeData) =>
+        setGraph(current => updateVectorCanvasData(current, id, data)),
       removeNode: (id: NodeId) => setGraph(current => removeNode(current, id)),
     }),
     [],

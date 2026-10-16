@@ -66,13 +66,32 @@ function nodeErrorsEqual(a: NodeError | null, b: NodeError | null): boolean {
       )
     case 'cell':
       return b.code === 'cell' && a.row === b.row && a.col === b.col && a.reason === b.reason
+    case 'vectorShape':
+      return b.code === 'vectorShape' && a.rows === b.rows && a.cols === b.cols && a.mode === b.mode
+    case 'complex':
+      return b.code === 'complex' && a.row === b.row && a.col === b.col
   }
+}
+
+/** Value comparison for the input values a widget saw, port by port. */
+function inputsEqual(
+  a: Record<string, Matrix<Algebraic> | null> | undefined,
+  b: Record<string, Matrix<Algebraic> | null> | undefined,
+): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  const ports = Object.keys(a)
+  const otherPorts = Object.keys(b)
+  return (
+    ports.length === otherPorts.length &&
+    ports.every(port => matricesEqual(a[port] ?? null, b[port] ?? null))
+  )
 }
 
 /** Value comparison: the engine rebuilds evaluation objects on every run. */
 function evaluationEquals(a: NodeEvaluation | null, b: NodeEvaluation | null): boolean {
   if (a === b) return true
-  if (!a || !b || !nodeErrorsEqual(a.error, b.error)) return false
+  if (!a || !b || !nodeErrorsEqual(a.error, b.error) || !inputsEqual(a.inputs, b.inputs)) return false
   const ports = Object.keys(a.outputs)
   const otherPorts = Object.keys(b.outputs)
   return (

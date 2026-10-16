@@ -13,6 +13,11 @@ the graph.
 - **Matrix multiply widget** — two input slots (Left, Right), one output; shows
   the result shape and dimension errors. Connect the output to a matrix widget
   to display the product.
+- **Vector canvas widget** — takes a matrix and draws its rows (or its columns)
+  as 2D vectors from the origin, labelled with their exact components and
+  auto-scaled to fit. A switch inside the widget flips the reading mode; a shape
+  that does not fit the mode, or a component with an imaginary part, is reported
+  as an error.
 - **Exact numbers** — all values are exact, never floating point. The math layer
   implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
   `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as
@@ -48,9 +53,11 @@ npm run lint     # oxlint
 
 With the dev server running, `npm run smoke` renders the app headlessly
 (Playwright), checks that values flow, that slot-dragging connects widgets, that
-read-only matrices are typeset with TeX, that dragging a widget redraws
-continuously without blanking the canvas, that the language switch works, and
-writes a screenshot to `/tmp/opencode/smoke.png`.
+read-only matrices are typeset with TeX, that the vector canvas draws the
+input's rows/columns and switches mode (including its shape and complex-value
+errors), that dragging a widget redraws continuously without blanking the
+canvas, that the language switch works, and writes a screenshot to
+`/tmp/opencode/smoke.png`.
 
 ## Layout
 

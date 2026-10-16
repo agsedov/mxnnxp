@@ -69,6 +69,23 @@ describe('reconcileNodes', () => {
     const grown = addNode(graph, 'matrixMultiply', 600, 400)
     expect(reconcileNodes(nodes, grown, evaluateGraph(grown))).toHaveLength(4)
   })
+
+  it('repaints a vector canvas when only its incoming value changes', () => {
+    // The canvas produces no output of its own: without comparing the values it
+    // saw on its input slot it would never redraw.
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'vectorCanvas', 300, 0)
+    const [matrix, canvas] = graph.nodes
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: canvas.id, port: 'm' })
+    const nodes = reconcileNodes([], graph, evaluateGraph(graph))
+
+    const edited = updateMatrixData(graph, matrix.id, { rows: 2, cols: 2, cells: [['2', '0'], ['0', '1']] })
+    const next = reconcileNodes(nodes, edited, evaluateGraph(edited))
+
+    expect(next[0]).not.toBe(nodes[0])
+    expect(next[1]).not.toBe(nodes[1])
+  })
 })
 
 describe('reconcileEdges', () => {

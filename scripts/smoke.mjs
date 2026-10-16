@@ -147,6 +147,53 @@ matrixInput.editableAgain =
   (await matrixB.locator('.cell').count()) === 4 && (await matrixB.locator('.cell').first().inputValue()) === '3'
 matrixInput.errors = errors.slice(errorsBeforeLink)
 
+// --- Vector canvas: draws the input matrix's rows (or columns) as arrows from
+// the origin; the reading mode is switched from inside the widget.
+const errorsBeforeCanvas = errors.length
+for (const [index, value] of ['1', '2', '3', '4'].entries()) {
+  await matrixA.locator('.cell').nth(index).fill(value)
+}
+await page.click('text=+ Vector Canvas')
+await page.waitForTimeout(300)
+const canvasId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId)
+const canvas = nodeById(canvasId)
+
+const canvasLinked = await dragBetween(
+  matrixA.locator('.react-flow__handle-right').first(),
+  canvas.locator('.react-flow__handle-left').first(),
+)
+await page.waitForTimeout(300)
+const arrowLabels = () =>
+  canvas.locator('.vector-plot-label').evaluateAll(els => els.map(el => (el.textContent ?? '').trim()))
+
+const vectorCanvas = {
+  linked: canvasLinked,
+  arrowCount: await canvas.locator('.vector-plot-shaft').count(),
+  rowsLabels: await arrowLabels(),
+}
+await canvas.getByRole('button', { name: 'Columns', exact: true }).click()
+await page.waitForTimeout(250)
+vectorCanvas.colsLabels = await arrowLabels()
+
+// A shape that does not fit the active mode is an error naming the shape.
+await canvas.getByRole('button', { name: 'Rows', exact: true }).click()
+await page.waitForTimeout(150)
+await matrixA.getByTitle('More columns').click()
+await page.waitForTimeout(250)
+vectorCanvas.shapeError = (await canvas.locator('.widget-message.error').textContent()).trim()
+
+// The same 2×3 matrix fits the other reading mode.
+await canvas.getByRole('button', { name: 'Columns', exact: true }).click()
+await page.waitForTimeout(250)
+vectorCanvas.colsAfterGrow = (await arrowLabels()).length
+vectorCanvas.errorCleared = (await canvas.locator('.widget-message.error').count()) === 0
+
+// The plane is real: an imaginary component is an error, not an approximation.
+await matrixA.locator('.cell').nth(0).fill('i')
+await page.waitForTimeout(250)
+vectorCanvas.complexError = (await canvas.locator('.widget-message.error').textContent()).trim()
+vectorCanvas.errors = errors.slice(errorsBeforeCanvas)
+
 // --- Regression test: dragging a widget header must redraw continuously while
 // the pointer moves and must never blank the graph (React Flow error 015).
 const errorsBeforeDrag = errors.length
@@ -257,6 +304,7 @@ const report = {
     errors: editErrors,
   },
   matrixInput,
+  vectorCanvas,
   nodeDrag: {
     followedMidway,
     followedTarget,
@@ -295,6 +343,15 @@ const failed =
   !matrixInput.showsComplex ||
   !matrixInput.editableAgain ||
   matrixInput.errors.length > 0 ||
+  !vectorCanvas.linked ||
+  vectorCanvas.arrowCount !== 2 ||
+  JSON.stringify(vectorCanvas.rowsLabels) !== JSON.stringify(['(1, 2)', '(3, 4)']) ||
+  JSON.stringify(vectorCanvas.colsLabels) !== JSON.stringify(['(1, 3)', '(2, 4)']) ||
+  vectorCanvas.shapeError !== 'Vector canvas needs 2 columns (or 2 rows), got 2×3' ||
+  vectorCanvas.colsAfterGrow !== 3 ||
+  !vectorCanvas.errorCleared ||
+  vectorCanvas.complexError !== 'Row 1, column 1: complex numbers cannot be plotted' ||
+  vectorCanvas.errors.length > 0 ||
   !followedMidway ||
   !followedTarget ||
   !moved ||

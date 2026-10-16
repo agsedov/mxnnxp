@@ -1,6 +1,6 @@
 import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
-import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, evaluateNode } from './widgets'
+import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, defaultVectorCanvasData, evaluateNode } from './widgets'
 import type {
   Connection,
   Evaluation,
@@ -9,6 +9,7 @@ import type {
   MatrixNodeData,
   NodeId,
   PortRef,
+  VectorCanvasNodeData,
   WidgetKind,
 } from './types'
 
@@ -28,7 +29,7 @@ export function addNode(graph: Graph, kind: WidgetKind, x: number, y: number): G
       : kind === 'scalar'
         ? { id, kind, x, y, data: defaultScalarData() }
         : kind === 'vectorCanvas'
-          ? { id, kind, x, y, data: { mode: 'rows' } }
+          ? { id, kind, x, y, data: defaultVectorCanvasData() }
           : { id, kind, x, y }
   return { nodes: [...graph.nodes, node], connections: graph.connections }
 }
@@ -61,6 +62,14 @@ export function updateScalarData(graph: Graph, id: NodeId, value: string): Graph
   return {
     ...graph,
     nodes: graph.nodes.map(node => (node.id === id && node.kind === 'scalar' ? { ...node, data: { value } } : node)),
+  }
+}
+
+/** Switches a vector canvas between reading rows and reading columns. */
+export function updateVectorCanvasData(graph: Graph, id: NodeId, data: VectorCanvasNodeData): Graph {
+  return {
+    ...graph,
+    nodes: graph.nodes.map(node => (node.id === id && node.kind === 'vectorCanvas' ? { ...node, data } : node)),
   }
 }
 
@@ -163,7 +172,7 @@ export function evaluateGraph(graph: Graph): Evaluation {
     }
     const result = evaluateNode(node, inputs, connectedInputs)
     outputsByNode.set(node.id, result.outputs)
-    evaluation.set(node.id, result)
+    evaluation.set(node.id, { ...result, inputs })
   }
 
   // Everything not visited by Kahn's algorithm is part of (or downstream of) a cycle.

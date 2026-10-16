@@ -63,5 +63,9 @@ export function describeNodeError(t: TFunction, error: NodeError): NodeErrorText
       }
     case 'cell':
       return { text: t('error.cell', { row: error.row, col: error.col }), detail: error.reason }
+    case 'vectorShape':
+      return { text: t('vectorCanvas.error.dim', { rows: error.rows, cols: error.cols }) }
+    case 'complex':
+      return { text: t('error.complex', { row: error.row, col: error.col }) }
   }
 }

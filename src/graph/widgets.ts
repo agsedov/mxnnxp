@@ -1,6 +1,7 @@
 import { parseExact, type Algebraic } from '../math/exact'
 import { Matrix, MatrixDimensionError } from '../math/matrix'
-import type { GraphNode, MatrixNodeData, NodeEvaluation } from './types'
+import type { GraphNode, MatrixNodeData, NodeEvaluation, VectorCanvasMode, VectorCanvasNodeData } from './types'
+import { fitsVectorMode, vectorComponents, vectorCount } from './vectorCanvas'
 
 export interface PortSpec {
   id: string
@@ -67,6 +68,10 @@ export function defaultScalarData(): { value: string } {
   return { value: '1' }
 }
 
+export function defaultVectorCanvasData(): VectorCanvasNodeData {
+  return { mode: 'rows' }
+}
+
 /**
  * Pure evaluation of a single widget.
  *
@@ -90,7 +95,7 @@ export function evaluateNode(
     case 'scalar':
       return evaluateScalar(node.data)
     case 'vectorCanvas':
-      return evaluateVectorCanvas(inputs.m ?? null)
+      return evaluateVectorCanvas(inputs.m ?? null, node.data.mode)
     case 'matrixMultiply': {
       const left = inputs.left ?? null
       const right = inputs.right ?? null
@@ -170,14 +175,23 @@ function evaluateScalar(data: { value: string }): NodeEvaluation {
   }
 }
 
-function evaluateVectorCanvas(matrix: Matrix<Algebraic> | null): NodeEvaluation {
+function evaluateVectorCanvas(matrix: Matrix<Algebraic> | null, mode: VectorCanvasMode): NodeEvaluation {
   if (!matrix) {
     return { outputs: {}, error: null }
   }
-  const is2DColumns = matrix.rows === 2 && matrix.cols >= 1
-  const is2DRows = matrix.cols === 2 && matrix.rows >= 1
-  if (!(is2DColumns || is2DRows)) {
-    return { outputs: {}, error: null }
+  if (!fitsVectorMode(matrix, mode)) {
+    return { outputs: {}, error: { code: 'vectorShape', rows: matrix.rows, cols: matrix.cols, mode } }
+  }
+  // The canvas draws a real 2D plane, so a complex component has no place on it.
+  for (let index = 0; index < vectorCount(matrix, mode); index++) {
+    const [x, y] = vectorComponents(matrix, mode, index)
+    if (!x.isReal()) return { outputs: {}, error: { code: 'complex', ...componentCell(mode, index, 0) } }
+    if (!y.isReal()) return { outputs: {}, error: { code: 'complex', ...componentCell(mode, index, 1) } }
   }
   return { outputs: {}, error: null }
+}
+
+/** Cell position of a vector component, following the mode's orientation. */
+function componentCell(mode: VectorCanvasMode, index: number, component: 0 | 1): { row: number; col: number } {
+  return mode === 'rows' ? { row: index + 1, col: component + 1 } : { row: component + 1, col: index + 1 }
 }

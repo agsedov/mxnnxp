@@ -78,15 +78,21 @@ export const en = {
   'multiply.noValue': 'no value yet',
   'scalar.error': 'not a valid exact number',
   'scalarMultiply.waiting': 'waiting for {ports}',
+  'vectorCanvas.mode.label': 'Mode',
   'vectorCanvas.mode.rows': 'Rows as vectors (2D)',
   'vectorCanvas.mode.cols': 'Columns as vectors (2D)',
-  'vectorCanvas.error.dim': 'Vector canvas needs 2 columns (or 2 rows)',
+  'vectorCanvas.mode.rows.short': 'Rows',
+  'vectorCanvas.mode.cols.short': 'Columns',
+  'vectorCanvas.waiting': 'waiting for {ports}',
+  'vectorCanvas.count': 'vectors: {count}',
+  'vectorCanvas.error.dim': 'Vector canvas needs 2 columns (or 2 rows), got {rows}×{cols}',
   'vectorCanvas.error.type': 'Waiting for a 2D matrix (each vector has 2 components)',
   'conjunction.and': 'and',
 
   'error.cycle': 'Cycle detected',
   'error.dimension': 'Dimension mismatch: {leftRows}×{leftCols} times {rightRows}×{rightCols}',
   'error.cell': 'Row {row}, column {col}: not a valid exact number',
+  'error.complex': 'Row {row}, column {col}: complex numbers cannot be plotted',
 } as const
 
 export type MessageKey = keyof typeof en
@@ -138,15 +144,21 @@ export const ru: Messages = {
   'multiply.noValue': 'пока нет значения',
   'scalar.error': 'недопустимое точное число',
   'scalarMultiply.waiting': 'ожидание: {ports}',
+  'vectorCanvas.mode.label': 'Режим',
   'vectorCanvas.mode.rows': 'Строки как векторы (2D)',
   'vectorCanvas.mode.cols': 'Столбцы как векторы (2D)',
-  'vectorCanvas.error.dim': 'Нужна матрица 2×n или n×2',
+  'vectorCanvas.mode.rows.short': 'Строки',
+  'vectorCanvas.mode.cols.short': 'Столбцы',
+  'vectorCanvas.waiting': 'ожидание: {ports}',
+  'vectorCanvas.count': 'векторов: {count}',
+  'vectorCanvas.error.dim': 'Нужна матрица 2×n или n×2, получено {rows}×{cols}',
   'vectorCanvas.error.type': 'Ожидание матрицы размерности 2D (каждый вектор — 2 компоненты)',
   'conjunction.and': 'и',
 
   'error.cycle': 'Обнаружен цикл',
   'error.dimension': 'Несовпадение размеров: {leftRows}×{leftCols} на {rightRows}×{rightCols}',
   'error.cell': 'Строка {row}, столбец {col}: недопустимое точное число',
+  'error.complex': 'Строка {row}, столбец {col}: комплексные числа не отображаются',
 }
 
 export const MESSAGES: Record<Locale, Messages> = { en, ru }

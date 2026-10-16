@@ -85,6 +85,21 @@ describe('labels', () => {
     expect(description.detail).toBe('Unknown name "x"')
   })
 
+  it('localizes vector canvas shape and complex-component errors', () => {
+    expect(describeNodeError(t, { code: 'vectorShape', rows: 3, cols: 3, mode: 'rows' }).text).toBe(
+      'Vector canvas needs 2 columns (or 2 rows), got 3×3',
+    )
+    expect(describeNodeError(tRu, { code: 'vectorShape', rows: 3, cols: 3, mode: 'cols' }).text).toBe(
+      'Нужна матрица 2×n или n×2, получено 3×3',
+    )
+    expect(describeNodeError(t, { code: 'complex', row: 1, col: 2 }).text).toBe(
+      'Row 1, column 2: complex numbers cannot be plotted',
+    )
+    expect(describeNodeError(tRu, { code: 'complex', row: 1, col: 2 }).text).toBe(
+      'Строка 1, столбец 2: комплексные числа не отображаются',
+    )
+  })
+
   it('maps every widget kind and slot to a translation key', () => {
     expect(WIDGET_TITLE_KEY.matrix).toBe('widget.matrix.title')
     expect(WIDGET_TITLE_KEY.matrixMultiply).toBe('widget.matrixMultiply.title')

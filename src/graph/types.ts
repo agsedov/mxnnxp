@@ -48,12 +48,22 @@ export interface ScalarMultiplyWidget {
   y: number
 }
 
+/**
+ * How the vector canvas reads its input matrix: `rows` treats every row as a
+ * vector (so the matrix must be m×2), `cols` treats every column as one (2×n).
+ */
+export type VectorCanvasMode = 'rows' | 'cols'
+
+export interface VectorCanvasNodeData {
+  mode: VectorCanvasMode
+}
+
 export interface VectorCanvasWidget {
   id: NodeId
   kind: 'vectorCanvas'
   x: number
   y: number
-  data: { mode: 'rows' | 'cols' }
+  data: VectorCanvasNodeData
 }
 
 export type GraphNode = MatrixWidget | MatrixMultiplyWidget | ScalarWidget | ScalarMultiplyWidget | VectorCanvasWidget
@@ -88,10 +98,19 @@ export type NodeError =
       readonly rightCols: number
     }
   | { readonly code: 'cell'; readonly row: number; readonly col: number; readonly reason: string }
+  | {
+      readonly code: 'vectorShape'
+      readonly rows: number
+      readonly cols: number
+      readonly mode: VectorCanvasMode
+    }
+  | { readonly code: 'complex'; readonly row: number; readonly col: number }
 
 export interface NodeEvaluation {
   /** Values produced on the widget's output slots (null = no value right now). */
   outputs: Record<string, Matrix<Algebraic> | null>
+  /** Values arriving on the widget's input slots (null = no value right now). */
+  inputs?: Record<string, Matrix<Algebraic> | null>
   /** Why the widget is in an error state, if it is. */
   error: NodeError | null
 }

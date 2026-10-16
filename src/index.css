@@ -403,6 +403,78 @@ body {
   width: 92px;
 }
 
+/* ---------- vector canvas ---------- */
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+}
+
+.mode-switch {
+  display: inline-flex;
+  border: 1px solid var(--node-border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  border: none;
+  background: #232a39;
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+.mode-btn:hover {
+  color: var(--text);
+}
+
+.mode-btn-active,
+.mode-btn-active:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.vector-plot {
+  margin-top: 2px;
+  border: 1px solid var(--node-border);
+  border-radius: 8px;
+  background: var(--cell-bg);
+}
+
+.vector-plot-grid {
+  stroke: #232a39;
+  stroke-width: 1;
+}
+
+.vector-plot-axis {
+  fill: var(--node-border-strong);
+  stroke: var(--node-border-strong);
+  stroke-width: 1.2;
+}
+
+.vector-plot-origin {
+  fill: var(--text-dim);
+}
+
+.vector-plot-shaft {
+  stroke-width: 2;
+}
+
+.vector-plot-tick {
+  fill: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 8.5px;
+}
+
+.vector-plot-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+}
+
 /* ---------- TeX (read-only values) ---------- */
 
 .tex {
