@@ -1,4 +1,6 @@
 export { Algebraic, AlgebraicError } from './algebraic'
+export { COS_SIN_TABLE } from './angles'
+export type { CosSin } from './angles'
 export { bigAbs, bigPow, bitLength, gcd, integerNthRoot, isqrt, largestPrimeFactor, squarefreeDecompose } from './integer'
 export type { SquarefreeDecomposition } from './integer'
 export { ExactParseError, parseExact, tryParseExact } from './parse'
