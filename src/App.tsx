@@ -13,6 +13,7 @@ import {
   type NodeChange,
 } from '@xyflow/react'
 
+import { AddWidgetMenu } from './components/AddWidgetMenu'
 import { GraphActionsContext } from './components/GraphActionsContext'
 import { LanguageSwitch } from './components/LanguageSwitch'
 import { MatrixNode } from './components/nodes/MatrixNode'
@@ -206,24 +207,7 @@ export default function App() {
       <GraphActionsContext.Provider value={graphActions}>
         <header className="toolbar">
           <span className="brand">mxnnxp</span>
-          <button className="btn" onClick={() => addWidget('matrix')}>
-            {t('toolbar.addMatrix')}
-          </button>
-          <button className="btn" onClick={() => addWidget('matrixMultiply')}>
-            {t('toolbar.addMultiply')}
-          </button>
-          <button className="btn" onClick={() => addWidget('scalar')}>
-            {t('toolbar.addScalar')}
-          </button>
-          <button className="btn" onClick={() => addWidget('scalarMultiply')}>
-            {t('toolbar.addScalarMultiply')}
-          </button>
-          <button className="btn" onClick={() => addWidget('vectorCanvas')}>
-            {t('toolbar.addVectorCanvas')}
-          </button>
-          <button className="btn" onClick={() => addWidget('rotation')}>
-            {t('toolbar.addRotation')}
-          </button>
+          <AddWidgetMenu onAdd={addWidget} />
           <button className="btn btn-quiet" onClick={reset}>
             {t('toolbar.reset')}
           </button>

@@ -16,6 +16,9 @@ Start set: **Matrix** widget and **Matrix multiply** widget.
 
 - The canvas is an infinite, pannable, zoomable 2D surface with a grid
   background (provided by React Flow).
+- New widgets come from the toolbar's **Add…** dropdown — one entry per widget
+  kind, labelled with the same title the widget's own header shows, in the
+  active language. The menu closes on choice, on a click outside it, and on Esc.
 - Widgets can be dragged to any position with the pointer.
 - Slots (ports) are connectable: press on a slot, drag to a compatible slot of
   another widget, release. A live wire follows the pointer during the drag.

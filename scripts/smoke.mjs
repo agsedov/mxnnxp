@@ -55,6 +55,12 @@ const nodeById = id => page.locator(`.react-flow__node[data-id="${id}"]`)
 const nodeIds = () =>
   page.locator('.react-flow__node').evaluateAll(els => els.map(el => el.getAttribute('data-id')))
 
+/** Opens the toolbar's "Add..." dropdown and picks a widget by its title. */
+async function addFromMenu(title) {
+  await page.locator('.add-menu-trigger').click()
+  await page.getByRole('menuitem', { name: title, exact: true }).click()
+}
+
 // Read-only values are typeset with KaTeX, which keeps the LaTeX source in the
 // MathML annotation — the stable thing to assert on.
 const texSource = node =>
@@ -79,8 +85,17 @@ const [matrixA, matrixB, multiply] = initialIds.map(nodeById)
 
 // --- The multiply widget shows no values of its own: display them by driving a
 // matrix widget with the product (added fresh, then parked clear of the others).
-await page.click('text=+ Matrix')
-await page.waitForTimeout(300)
+// Adding now goes through the toolbar's "Add..." dropdown.
+await page.locator('.add-menu-trigger').click()
+await page.locator('.add-menu-list').waitFor()
+const addMenu = {
+  open: await page.locator('.add-menu-list').isVisible(),
+  items: await page.getByRole('menuitem').allTextContents(),
+}
+await page.getByRole('menuitem', { name: 'Matrix', exact: true }).click()
+await page.waitForTimeout(150)
+addMenu.closesOnChoice = !(await page.locator('.add-menu-list').isVisible())
+await page.waitForTimeout(250)
 const displayId = (await nodeIds()).find(id => !initialIds.includes(id))
 const display = nodeById(displayId)
 
@@ -152,7 +167,7 @@ matrixInput.errors = errors.slice(errorsBeforeLink)
 // before the canvas section, whose mode buttons select that widget and would
 // then cover the newer rotation widget.
 const errorsBeforeRotation = errors.length
-await page.click('text=+ Rotation')
+await addFromMenu('2D Rotation matrix')
 await page.waitForTimeout(300)
 const rotationId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId)
 const rotation = nodeById(rotationId)
@@ -192,7 +207,7 @@ const errorsBeforeCanvas = errors.length
 for (const [index, value] of ['1', '2', '3', '4'].entries()) {
   await matrixA.locator('.cell').nth(index).fill(value)
 }
-await page.click('text=+ Vector Canvas')
+await addFromMenu('Vector canvas')
 await page.waitForTimeout(300)
 const canvasId = (await nodeIds()).find(id => !initialIds.includes(id) && id !== displayId && id !== rotationId)
 const canvas = nodeById(canvasId)
@@ -289,15 +304,27 @@ const dragErrors = errors.slice(errorsBeforeDrag).filter(e => e.includes('015'))
 const errorsBeforeLocale = errors.length
 const englishBtn = page.getByRole('button', { name: 'EN', exact: true })
 const russianBtn = page.getByRole('button', { name: 'RU', exact: true })
+// The Add dropdown's entries in Russian — exactly the widget titles.
+const RU_MENU = ['Матрица', 'Умножение матриц', 'Скаляр', 'Умножение на скаляр', 'Векторный холст', 'Матрица поворота 2D']
 await russianBtn.click()
 await page.waitForTimeout(200)
 const locale = {
   htmlLang: await page.evaluate(() => document.documentElement.lang),
-  addMatrix: (await page.locator('.toolbar .btn').first().textContent()).trim(),
+  addMenu: (await page.locator('.toolbar .btn').first().textContent()).trim(),
   multiplyTitle: (await multiply.locator('.widget-title').textContent()).trim(),
   leftSlot: (await multiply.locator('.slot-label').first().textContent()).trim(),
   stored: await page.evaluate(() => localStorage.getItem('mxnnxp.locale')),
 }
+
+// The Add dropdown is bilingual too: its entries are the widget titles.
+await page.locator('.add-menu-trigger').click()
+await page.locator('.add-menu-list').waitFor()
+locale.russianMenuOpen = await page.locator('.add-menu-list').isVisible()
+locale.russianMenuItems = await page.getByRole('menuitem').allTextContents()
+await page.keyboard.press('Escape')
+await page.waitForTimeout(150)
+locale.menuClosedOnEscape = !(await page.locator('.add-menu-list').isVisible())
+
 await matrixA.locator('.cell').first().fill('x')
 await page.waitForTimeout(250)
 locale.cellError = (await matrixA.locator('.widget-message.error').textContent()).trim()
@@ -316,7 +343,7 @@ await page.goto(`${BASE}/?lang=ru`, { waitUntil: 'networkidle' })
 await page.waitForSelector('.react-flow__node', { timeout: 15000 })
 const forced = {
   htmlLang: await page.evaluate(() => document.documentElement.lang),
-  addMatrix: (await page.locator('.toolbar .btn').first().textContent()).trim(),
+  addMenu: (await page.locator('.toolbar .btn').first().textContent()).trim(),
   activeBtn: (await page.locator('.lang-btn-active').textContent()).trim(),
   stored: await page.evaluate(() => localStorage.getItem('mxnnxp.locale')),
 }
@@ -392,6 +419,7 @@ await browser.close()
 const report = {
   nodeCount,
   initialEdges,
+  addMenu,
   connection,
   cellEdit: {
     samples: editSamples.length,
@@ -421,6 +449,12 @@ console.log(JSON.stringify(report, null, 2))
 const failed =
   nodeCount !== 3 ||
   initialEdges !== 2 ||
+  !addMenu.open ||
+  addMenu.items.length !== 6 ||
+  addMenu.items[0] !== 'Matrix' ||
+  addMenu.items[5] !== '2D Rotation matrix' ||
+  addMenu.items.some(item => item.startsWith('+')) ||
+  !addMenu.closesOnChoice ||
   !connection.connected ||
   !connection.edgeAdded ||
   !connection.rendered ||
@@ -469,17 +503,20 @@ const failed =
   !postEdgesVisible ||
   dragErrors.length > 0 ||
   locale.htmlLang !== 'ru' ||
-  locale.addMatrix !== '+ Матрица' ||
+  locale.addMenu !== 'Добавить...' ||
+  !locale.russianMenuOpen ||
+  JSON.stringify(locale.russianMenuItems) !== JSON.stringify(RU_MENU) ||
+  !locale.menuClosedOnEscape ||
   locale.multiplyTitle !== 'Умножение матриц' ||
   locale.leftSlot !== 'Левая' ||
   locale.stored !== 'ru' ||
   locale.cellError !== 'Строка 1, столбец 1: недопустимое точное число' ||
   locale.cellErrorDetail !== 'Unknown name "x"' ||
-  locale.backToEnglish !== '+ Matrix' ||
+  locale.backToEnglish !== 'Add...' ||
   locale.htmlLangAfter !== 'en' ||
   locale.errors.length > 0 ||
   forced.htmlLang !== 'ru' ||
-  forced.addMatrix !== '+ Матрица' ||
+  forced.addMenu !== 'Добавить...' ||
   forced.activeBtn !== 'RU' ||
   forced.stored !== 'en' ||
   forced.invalidParamLang !== 'en' ||

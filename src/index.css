@@ -89,6 +89,63 @@ body {
   color: var(--error);
 }
 
+/* ---------- add-widget dropdown ---------- */
+
+.add-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.add-menu-trigger::after {
+  content: '▾';
+  margin-left: 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.add-menu-trigger[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.add-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--node-border-strong);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.add-menu-item {
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.add-menu-item:hover {
+  background: var(--accent-soft);
+  color: #fff;
+}
+
+.add-menu-item:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
 .hint {
   margin-left: auto;
   font-size: 12.5px;

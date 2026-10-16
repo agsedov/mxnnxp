@@ -36,12 +36,7 @@ export function resolveLocale(param: string | null, stored: string | null): Loca
 export const en = {
   'lang.label': 'Language',
 
-  'toolbar.addMatrix': '+ Matrix',
-  'toolbar.addMultiply': '+ Multiply',
-  'toolbar.addScalar': '+ Scalar',
-  'toolbar.addScalarMultiply': '+ Scalar Multiply',
-  'toolbar.addVectorCanvas': '+ Vector Canvas',
-  'toolbar.addRotation': '+ Rotation',
+  'toolbar.addMenu': 'Add...',
   'toolbar.reset': 'Reset',
   'toolbar.share': 'Share link',
   'toolbar.shareCopied': 'Link copied',
@@ -108,12 +103,7 @@ export type TFunction = (key: MessageKey, vars?: Vars) => string
 export const ru: Messages = {
   'lang.label': 'Язык',
 
-  'toolbar.addMatrix': '+ Матрица',
-  'toolbar.addMultiply': '+ Умножение',
-  'toolbar.addScalar': '+ Скаляр',
-  'toolbar.addScalarMultiply': '+ Умножение на скаляр',
-  'toolbar.addVectorCanvas': '+ Векторный холст',
-  'toolbar.addRotation': '+ Поворот',
+  'toolbar.addMenu': 'Добавить...',
   'toolbar.reset': 'Сброс',
   'toolbar.share': 'Ссылка',
   'toolbar.shareCopied': 'Ссылка скопирована',
