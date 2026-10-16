@@ -54,46 +54,69 @@ function evaluationSnapshot(graph: Graph): Record<string, Record<string, string 
   return snapshot
 }
 
-/** base64url-encodes ASCII text; lets the tests hand-build payloads directly. */
-function encodeText(text: string): string {
-  return btoa(text).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
+/** base64url-encodes bytes as-is — no deflate pass (the old wire format). */
+function base64Url(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
 
-function encode(value: unknown): string {
+/**
+ * Deflates bytes and base64url-encodes them — the wire format `serializeGraph`
+ * emits — so tests can hand-build payloads without using the codec under test.
+ */
+async function encodeBytes(bytes: Uint8Array): Promise<string> {
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'))
+  const deflated = new Uint8Array(await new Response(stream).arrayBuffer())
+  return base64Url(deflated)
+}
+
+function encodeText(text: string): Promise<string> {
+  return encodeBytes(new TextEncoder().encode(text))
+}
+
+function encode(value: unknown): Promise<string> {
   return encodeText(JSON.stringify(value))
 }
 
 /** A well-formed envelope around a widget/wire fragment, for malformed-payload tests. */
-function payload(nodes: unknown[], connections: unknown[] = []): string {
+function payload(nodes: unknown[], connections: unknown[] = []): Promise<string> {
   return encode({ v: 1, nodes, connections })
 }
 
 const VALID_MATRIX = { id: 'a', kind: 'matrix', x: 10, y: 20, data: { rows: 1, cols: 1, cells: [['1']] } }
 
 describe('serializeGraph', () => {
-  it('round-trips every widget, its content, position and wiring', () => {
+  it('round-trips every widget, its content, position and wiring', async () => {
     const graph = sampleGraph()
-    expect(deserializeGraph(serializeGraph(graph))).toEqual(graph)
+    expect(await deserializeGraph(await serializeGraph(graph))).toEqual(graph)
   })
 
-  it('round-trips an empty canvas', () => {
-    expect(deserializeGraph(serializeGraph(createGraph()))).toEqual(createGraph())
+  it('round-trips an empty canvas', async () => {
+    expect(await deserializeGraph(await serializeGraph(createGraph()))).toEqual(createGraph())
   })
 
-  it('is deterministic', () => {
+  it('is deterministic', async () => {
     const graph = sampleGraph()
-    expect(serializeGraph(graph)).toBe(serializeGraph(graph))
+    expect(await serializeGraph(graph)).toBe(await serializeGraph(graph))
   })
 
-  it('emits URL-safe text that needs no escaping', () => {
-    const encoded = serializeGraph(sampleGraph())
+  it('emits URL-safe text that needs no escaping', async () => {
+    const encoded = await serializeGraph(sampleGraph())
     expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/)
     expect(encodeURIComponent(encoded)).toBe(encoded)
   })
 
-  it('restores the same values when the decoded graph is evaluated', () => {
+  it('packs a graph of many cells far below its plain JSON', async () => {
     const graph = sampleGraph()
-    const restored = deserializeGraph(serializeGraph(graph))
+    const payload = { v: 1, nodes: graph.nodes, connections: graph.connections }
+    const plain = new TextEncoder().encode(JSON.stringify(payload)).length
+    // base64url alone costs 4/3, so beating the raw JSON at all proves the
+    // deflate pass earns its keep.
+    expect((await serializeGraph(graph)).length).toBeLessThan(plain)
+  })
+
+  it('restores the same values when the decoded graph is evaluated', async () => {
+    const graph = sampleGraph()
+    const restored = await deserializeGraph(await serializeGraph(graph))
 
     expect(evaluationSnapshot(restored)).toEqual(evaluationSnapshot(graph))
 
@@ -108,65 +131,79 @@ describe('serializeGraph', () => {
 })
 
 describe('deserializeGraph', () => {
-  it('rejects text that is not base64url', () => {
-    expect(() => deserializeGraph('not base64url!')).toThrow(GraphSerializationError)
+  it('rejects text that is not base64url', async () => {
+    await expect(deserializeGraph('not base64url!')).rejects.toThrow(GraphSerializationError)
   })
 
-  it('rejects a payload that is not JSON', () => {
-    expect(() => deserializeGraph(encodeText('{oops'))).toThrow(GraphSerializationError)
+  it('rejects a payload that is not deflate-compressed', async () => {
+    // Plain base64url JSON is the old, uncompressed wire format: not accepted.
+    const plain = base64Url(new TextEncoder().encode('{"v":1,"nodes":[],"connections":[]}'))
+    await expect(deserializeGraph(plain)).rejects.toThrow(/deflate/)
   })
 
-  it('rejects a payload that is not an object', () => {
-    expect(() => deserializeGraph(encode([1, 2, 3]))).toThrow(/not an object/)
+  it('rejects a payload that is not UTF-8', async () => {
+    await expect(deserializeGraph(await encodeBytes(Uint8Array.of(0xff, 0xff)))).rejects.toThrow(/UTF-8/)
   })
 
-  it('rejects another format version', () => {
-    expect(() => deserializeGraph(encode({ v: 2, nodes: [], connections: [] }))).toThrow(/version/)
+  it('rejects a payload that is not JSON', async () => {
+    await expect(deserializeGraph(await encodeText('{oops'))).rejects.toThrow(/not valid JSON/)
   })
 
-  it('rejects an unknown widget kind', () => {
-    expect(() => deserializeGraph(payload([{ ...VALID_MATRIX, kind: 'hypercube' }]))).toThrow(/known widget kind/)
+  it('rejects a payload that is not an object', async () => {
+    await expect(deserializeGraph(await encode([1, 2, 3]))).rejects.toThrow(/not an object/)
   })
 
-  it('rejects duplicate widget ids', () => {
-    expect(() => deserializeGraph(payload([VALID_MATRIX, VALID_MATRIX]))).toThrow(/Duplicate widget id/)
+  it('rejects another format version', async () => {
+    await expect(deserializeGraph(await encode({ v: 2, nodes: [], connections: [] }))).rejects.toThrow(/version/)
   })
 
-  it('rejects a widget whose cells do not match its size', () => {
+  it('rejects an unknown widget kind', async () => {
+    await expect(deserializeGraph(await payload([{ ...VALID_MATRIX, kind: 'hypercube' }]))).rejects.toThrow(
+      /known widget kind/,
+    )
+  })
+
+  it('rejects duplicate widget ids', async () => {
+    await expect(deserializeGraph(await payload([VALID_MATRIX, VALID_MATRIX]))).rejects.toThrow(/Duplicate widget id/)
+  })
+
+  it('rejects a widget whose cells do not match its size', async () => {
     const node = { ...VALID_MATRIX, data: { rows: 2, cols: 2, cells: [['1', '0']] } }
-    expect(() => deserializeGraph(payload([node]))).toThrow(/expected 2/)
+    await expect(deserializeGraph(await payload([node]))).rejects.toThrow(/expected 2/)
   })
 
-  it('rejects a wire to an unknown widget', () => {
+  it('rejects a wire to an unknown widget', async () => {
     const wire = { id: 'c1', from: { node: 'a', port: 'm' }, to: { node: 'ghost', port: 'in' } }
-    expect(() => deserializeGraph(payload([VALID_MATRIX], [wire]))).toThrow(/unknown widget/)
+    await expect(deserializeGraph(await payload([VALID_MATRIX], [wire]))).rejects.toThrow(/unknown widget/)
   })
 
-  it('rejects a wire to a slot the widget does not have', () => {
+  it('rejects a wire to a slot the widget does not have', async () => {
     const wire = { id: 'c1', from: { node: 'a', port: 'sideways' }, to: { node: 'a', port: 'in' } }
-    expect(() => deserializeGraph(payload([VALID_MATRIX], [wire]))).toThrow(/no output slot/)
+    await expect(deserializeGraph(await payload([VALID_MATRIX], [wire]))).rejects.toThrow(/no output slot/)
   })
 
-  it('rejects a widget wired to itself', () => {
+  it('rejects a widget wired to itself', async () => {
     const wire = { id: 'c1', from: { node: 'a', port: 'm' }, to: { node: 'a', port: 'in' } }
-    expect(() => deserializeGraph(payload([VALID_MATRIX], [wire]))).toThrow(/itself/)
+    await expect(deserializeGraph(await payload([VALID_MATRIX], [wire]))).rejects.toThrow(/itself/)
   })
 
-  it('rejects duplicate connection ids', () => {
+  it('rejects duplicate connection ids', async () => {
     const nodes = [VALID_MATRIX, { ...VALID_MATRIX, id: 'b' }]
     const wire = (from: string, to: string) => ({ id: 'c1', from: { node: from, port: 'm' }, to: { node: to, port: 'in' } })
-    expect(() => deserializeGraph(payload(nodes, [wire('a', 'b'), wire('b', 'a')]))).toThrow(/Duplicate connection id/)
+    await expect(deserializeGraph(await payload(nodes, [wire('a', 'b'), wire('b', 'a')]))).rejects.toThrow(
+      /Duplicate connection id/,
+    )
   })
 })
 
 describe('tryDeserializeGraph', () => {
-  it('returns the graph for a valid payload', () => {
+  it('returns the graph for a valid payload', async () => {
     const graph = sampleGraph()
-    expect(tryDeserializeGraph(serializeGraph(graph))).toEqual(graph)
+    expect(await tryDeserializeGraph(await serializeGraph(graph))).toEqual(graph)
   })
 
-  it('returns null instead of throwing', () => {
-    expect(tryDeserializeGraph('!!!')).toBeNull()
-    expect(tryDeserializeGraph(encode({ v: 99 }))).toBeNull()
+  it('returns null instead of throwing', async () => {
+    expect(await tryDeserializeGraph('!!!')).toBeNull()
+    expect(await tryDeserializeGraph(await encode({ v: 99 }))).toBeNull()
   })
 })

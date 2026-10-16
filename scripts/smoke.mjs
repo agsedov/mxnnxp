@@ -61,6 +61,16 @@ async function addFromMenu(title) {
   await page.getByRole('menuitem', { name: title, exact: true }).click()
 }
 
+/**
+ * Encodes a graph envelope the way the app does: deflated JSON, base64url. Used
+ * to hand-write a `#g=` link without going through the app's own Share button.
+ */
+async function encodeGraph(value) {
+  const stream = new Blob([JSON.stringify(value)]).stream().pipeThrough(new CompressionStream('deflate'))
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+  return Buffer.from(bytes).toString('base64url')
+}
+
 // Read-only values are typeset with KaTeX, which keeps the LaTeX source in the
 // MathML annotation — the stable thing to assert on.
 const texSource = node =>
@@ -383,21 +393,18 @@ share.firstCell = await page.locator('.cell').first().inputValue()
 
 // A hand-written payload (the same wire format) must reopen those exact
 // widgets, their cells and their wires.
-const golden = Buffer.from(
-  JSON.stringify({
-    v: 1,
-    nodes: [
-      { id: 'g1', kind: 'matrix', x: 80, y: 80, data: { rows: 1, cols: 2, cells: [['1/3', 'sqrt(2)']] } },
-      { id: 'g2', kind: 'matrix', x: 480, y: 80, data: { rows: 2, cols: 1, cells: [['1'], ['0']] } },
-      { id: 'g3', kind: 'matrixMultiply', x: 260, y: 320 },
-    ],
-    connections: [
-      { id: 'w1', from: { node: 'g1', port: 'm' }, to: { node: 'g3', port: 'left' } },
-      { id: 'w2', from: { node: 'g2', port: 'm' }, to: { node: 'g3', port: 'right' } },
-    ],
-  }),
-  'utf8',
-).toString('base64url')
+const golden = await encodeGraph({
+  v: 1,
+  nodes: [
+    { id: 'g1', kind: 'matrix', x: 80, y: 80, data: { rows: 1, cols: 2, cells: [['1/3', 'sqrt(2)']] } },
+    { id: 'g2', kind: 'matrix', x: 480, y: 80, data: { rows: 2, cols: 1, cells: [['1'], ['0']] } },
+    { id: 'g3', kind: 'matrixMultiply', x: 260, y: 320 },
+  ],
+  connections: [
+    { id: 'w1', from: { node: 'g1', port: 'm' }, to: { node: 'g3', port: 'left' } },
+    { id: 'w2', from: { node: 'g2', port: 'm' }, to: { node: 'g3', port: 'right' } },
+  ],
+})
 
 await page.goto(`${BASE}/#g=${golden}`, { waitUntil: 'networkidle' })
 await page.waitForSelector('.cell', { timeout: 15000 })

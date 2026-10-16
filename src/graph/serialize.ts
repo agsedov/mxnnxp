@@ -5,10 +5,16 @@ import { WIDGET_SPECS } from './widgets'
  * Graph serialization: the editable document — every widget with its content
  * and position, plus the wires between them — as one string fit for a link.
  *
- * The payload is a versioned JSON envelope, UTF-8 encoded and written as
- * **unpadded base64url** (RFC 4648 §5), so it can be dropped into a URL
- * (`#g=<payload>`, the fragment keeps it out of server logs) or into
- * `localStorage` with no further escaping.
+ * The payload is a versioned JSON envelope, UTF-8 encoded, **deflated** and
+ * written as **unpadded base64url** (RFC 4648 §5), so it can be dropped into a
+ * URL (`#g=<payload>`, the fragment keeps it out of server logs) or into
+ * `localStorage` with no further escaping. Editable grids are repetitive JSON —
+ * long runs of keys, quotes and commas — which deflate squeezes several-fold,
+ * so the link stays short enough to paste anywhere. Compression is a transport
+ * detail: it does not change the document.
+ *
+ * Compression goes through the platform's `CompressionStream` (no dependency),
+ * which is asynchronous — hence the async codec and its asynchronous callers.
  *
  * Only the document travels: values are recomputed on load, so the widgets and
  * their wires reappear exactly as they were — and re-evaluate to the same
@@ -26,10 +32,11 @@ export class GraphSerializationError extends Error {
   }
 }
 
-/** Serializes a graph into a URL-safe base64url string. */
-export function serializeGraph(graph: Graph): string {
+/** Serializes a graph into a URL-safe string: deflated JSON, base64url-encoded. */
+export async function serializeGraph(graph: Graph): Promise<string> {
   const payload = { v: GRAPH_FORMAT_VERSION, nodes: graph.nodes, connections: graph.connections }
-  return toBase64Url(JSON.stringify(payload))
+  const json = new TextEncoder().encode(JSON.stringify(payload))
+  return toBase64Url(await deflate(json))
 }
 
 /**
@@ -39,8 +46,8 @@ export function serializeGraph(graph: Graph): string {
  * created from or fail loudly — silently dropping widgets or wires would make
  * the same link mean different things. Throws {@link GraphSerializationError}.
  */
-export function deserializeGraph(encoded: string): Graph {
-  const text = fromBase64Url(encoded)
+export async function deserializeGraph(encoded: string): Promise<Graph> {
+  const text = await inflateToText(fromBase64Url(encoded))
   let value: unknown
   try {
     value = JSON.parse(text)
@@ -51,11 +58,26 @@ export function deserializeGraph(encoded: string): Graph {
 }
 
 /** Like {@link deserializeGraph}, but returns `null` instead of throwing. */
-export function tryDeserializeGraph(encoded: string): Graph | null {
+export async function tryDeserializeGraph(encoded: string): Promise<Graph | null> {
   try {
-    return deserializeGraph(encoded)
+    return await deserializeGraph(encoded)
   } catch {
     return null
+  }
+}
+
+/** Inflates the payload's bytes and reads them back as UTF-8 text. */
+async function inflateToText(bytes: Uint8Array): Promise<string> {
+  let inflated: Uint8Array
+  try {
+    inflated = await inflate(bytes)
+  } catch {
+    throw new GraphSerializationError('The payload is not valid deflate data')
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(inflated)
+  } catch {
+    throw new GraphSerializationError('The decoded payload is not valid UTF-8')
   }
 }
 
@@ -194,12 +216,32 @@ function asInteger(value: unknown, where: string): number {
   return number
 }
 
+// ---------- deflate (platform streams, no dependency) ----------
+
+/**
+ * Compresses with zlib's `deflate` — the one stream format every engine
+ * implements, browsers and Node alike. Its six-byte wrapper is irrelevant next
+ * to the savings on a repetitive payload.
+ */
+function deflate(bytes: Uint8Array): Promise<Uint8Array> {
+  return pump(bytes, new CompressionStream('deflate'))
+}
+
+/** Reverses {@link deflate}; rejects when the bytes are not a deflate stream. */
+function inflate(bytes: Uint8Array): Promise<Uint8Array> {
+  return pump(bytes, new DecompressionStream('deflate'))
+}
+
+async function pump(bytes: Uint8Array, transform: TransformStream<BufferSource, Uint8Array>): Promise<Uint8Array> {
+  const stream = new Blob([bytes]).stream().pipeThrough(transform)
+  return new Uint8Array(await new Response(stream).arrayBuffer())
+}
+
 // ---------- base64url (RFC 4648 §5, no padding) ----------
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
-function toBase64Url(text: string): string {
-  const bytes = new TextEncoder().encode(text)
+function toBase64Url(bytes: Uint8Array): string {
   let encoded = ''
   for (let index = 0; index < bytes.length; index += 3) {
     const remaining = bytes.length - index
@@ -216,7 +258,7 @@ function toBase64Url(text: string): string {
   return encoded
 }
 
-function fromBase64Url(encoded: string): string {
+function fromBase64Url(encoded: string): Uint8Array {
   const bytes: number[] = []
   let buffer = 0
   let bits = 0
@@ -231,9 +273,5 @@ function fromBase64Url(encoded: string): string {
     }
     buffer &= (1 << bits) - 1
   }
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(bytes))
-  } catch {
-    throw new GraphSerializationError('Not valid base64url: the bytes are not UTF-8')
-  }
+  return Uint8Array.from(bytes)
 }

@@ -40,7 +40,7 @@ import {
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
 import type { Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
-import { graphFromHash, shareUrl } from './share'
+import { graphFromHash, hasGraphHash, shareUrl } from './share'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -63,15 +63,15 @@ function createInitialGraph(): Graph {
   return graph
 }
 
-/** The graph to open with: a shared one from the URL, else the demo scene. */
-function openingGraph(): Graph {
-  return graphFromHash(window.location.hash) ?? createInitialGraph()
-}
-
 export default function App() {
   const { t } = useI18n()
-  const [graph, setGraph] = useState<Graph>(openingGraph)
+  const [graph, setGraph] = useState<Graph>(createInitialGraph)
   const [linkCopied, setLinkCopied] = useState(false)
+  // A shared graph is decoded asynchronously (its payload is deflated), so while
+  // that is in flight we hold the canvas back — otherwise the demo scene would
+  // flash for a moment before the linked graph replaces it. Plain visits (no
+  // `#g=`) start resolved and are unaffected.
+  const [opening, setOpening] = useState(() => hasGraphHash(window.location.hash))
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
 
@@ -175,7 +175,7 @@ export default function App() {
   // content, positions and wires). If the clipboard is unavailable, fall back to
   // putting the link in the address bar so it can still be copied by hand.
   const share = useCallback(async () => {
-    const url = shareUrl(window.location.href, graph)
+    const url = await shareUrl(window.location.href, graph)
     try {
       await navigator.clipboard.writeText(url)
     } catch {
@@ -190,17 +190,33 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [linkCopied])
 
-  // Opening a shared link in an already-open tab is only a fragment change, so
-  // the page does not reload — restore the linked graph (or keep the current one
-  // if the fragment carries no valid graph).
+  // Read the graph a link carries: once on boot, then again on every later
+  // fragment change — opening a shared link in an already-open tab is only a
+  // fragment change, so the page does not reload. A fragment without a valid
+  // graph leaves the canvas as it is.
   useEffect(() => {
-    const onHashChange = () => {
-      const shared = graphFromHash(window.location.hash)
-      if (shared) setGraph(shared)
+    let live = true
+    const open = () => {
+      if (!hasGraphHash(window.location.hash)) {
+        setOpening(false)
+        return
+      }
+      void graphFromHash(window.location.hash).then(shared => {
+        if (!live) return
+        if (shared) setGraph(shared)
+        setOpening(false)
+      })
     }
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    open()
+    window.addEventListener('hashchange', open)
+    return () => {
+      live = false
+      window.removeEventListener('hashchange', open)
+    }
   }, [])
+
+  // A shared link is still being decoded: see the `opening` state above.
+  if (opening) return null
 
   return (
     <div className="app">
