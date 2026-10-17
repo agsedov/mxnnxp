@@ -56,6 +56,7 @@ export const en = {
   'widget.rotation.title': '2D Rotation matrix',
   'widget.rowEchelon.title': 'Row echelon form',
   'widget.rref.title': 'Reduced row echelon form',
+  'widget.inverse.title': 'Inverse matrix',
   'widget.comment.title': 'Comment',
   'widget.remove': 'Remove widget',
 
@@ -74,6 +75,8 @@ export const en = {
   'widget.rowEchelon.port.ref': 'Row echelon form',
   'widget.rref.port.m': 'matrix',
   'widget.rref.port.rref': 'Reduced row echelon form',
+  'widget.inverse.port.m': 'matrix',
+  'widget.inverse.port.inverse': 'Inverse matrix',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -92,6 +95,7 @@ export const en = {
   'scalarMultiply.waiting': 'waiting for {ports}',
   'rowEchelon.waiting': 'waiting for {ports}',
   'rref.waiting': 'waiting for {ports}',
+  'inverse.waiting': 'waiting for {ports}',
   'vectorCanvas.mode.label': 'Mode',
   'vectorCanvas.mode.rows': 'Rows as vectors (2D)',
   'vectorCanvas.mode.cols': 'Columns as vectors (2D)',
@@ -110,6 +114,8 @@ export const en = {
   'error.dimension': 'Dimension mismatch: {leftRows}×{leftCols} times {rightRows}×{rightCols}',
   'error.cell': 'Row {row}, column {col}: not a valid exact number',
   'error.complex': 'Row {row}, column {col}: complex numbers cannot be plotted',
+  'inverse.error.notSquare': 'Cannot invert: matrix is not square ({rows}×{cols})',
+  'inverse.error.singular': 'Matrix is singular ({rows}×{cols}): no inverse exists',
 } as const
 
 export type MessageKey = keyof typeof en
@@ -139,6 +145,7 @@ export const ru: Messages = {
   'widget.rotation.title': 'Матрица поворота 2D',
   'widget.rowEchelon.title': 'Ступенчатый вид',
   'widget.rref.title': 'Приведённый ступенчатый вид',
+  'widget.inverse.title': 'Обратная матрица',
   'widget.comment.title': 'Комментарий',
   'widget.remove': 'Удалить виджет',
 
@@ -157,6 +164,8 @@ export const ru: Messages = {
   'widget.rowEchelon.port.ref': 'Ступенчатый вид',
   'widget.rref.port.m': 'матрица',
   'widget.rref.port.rref': 'Приведённый ступенчатый вид',
+  'widget.inverse.port.m': 'матрица',
+  'widget.inverse.port.inverse': 'Обратная матрица',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -175,6 +184,7 @@ export const ru: Messages = {
   'scalarMultiply.waiting': 'ожидание: {ports}',
   'rowEchelon.waiting': 'ожидание: {ports}',
   'rref.waiting': 'ожидание: {ports}',
+  'inverse.waiting': 'ожидание: {ports}',
   'vectorCanvas.mode.label': 'Режим',
   'vectorCanvas.mode.rows': 'Строки как векторы (2D)',
   'vectorCanvas.mode.cols': 'Столбцы как векторы (2D)',
@@ -193,6 +203,8 @@ export const ru: Messages = {
   'error.dimension': 'Несовпадение размеров: {leftRows}×{leftCols} на {rightRows}×{rightCols}',
   'error.cell': 'Строка {row}, столбец {col}: недопустимое точное число',
   'error.complex': 'Строка {row}, столбец {col}: комплексные числа не отображаются',
+  'inverse.error.notSquare': 'Нельзя обратить: матрица не квадратная ({rows}×{cols})',
+  'inverse.error.singular': 'Матрица вырождена ({rows}×{cols}): обратной не существует',
 }
 
 export const MESSAGES: Record<Locale, Messages> = { en, ru }

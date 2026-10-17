@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Algebraic, parseExact } from './exact'
-import { Matrix, MatrixDimensionError } from './matrix'
+import { Matrix, MatrixDimensionError, MatrixInverseError } from './matrix'
 
 const f = (text: string): Algebraic => parseExact(text)
 const grid = (rows: string[][]): Matrix<Algebraic> => Matrix.fromRows(rows.map(row => row.map(f)))
@@ -210,6 +210,103 @@ describe('Matrix.reducedRowEchelon', () => {
       ['3', '4'],
     ])
     Matrix.rref(m, Algebraic.ONE)
+    expect(m.toString()).toBe('[1, 2] [3, 4]')
+  })
+})
+
+describe('Matrix.identity', () => {
+  it('builds the identity over the given field', () => {
+    expect(Matrix.identity(3, Algebraic.ZERO, Algebraic.ONE).toString()).toBe('[1, 0, 0] [0, 1, 0] [0, 0, 1]')
+  })
+
+  it('rejects a non-positive size', () => {
+    expect(() => Matrix.identity(0, Algebraic.ZERO, Algebraic.ONE)).toThrow(RangeError)
+  })
+})
+
+describe('Matrix.inverse', () => {
+  const inverse = (cells: string[][]) => Matrix.inverse(grid(cells), Algebraic.ZERO, Algebraic.ONE)
+
+  it('inverts a 2×2 matrix', () => {
+    expect(
+      inverse([
+        ['1', '2'],
+        ['3', '4'],
+      ]).toString(),
+    ).toBe('[-2, 1] [3/2, -1/2]')
+  })
+
+  it('inverts a 3×3 matrix with fractions', () => {
+    expect(
+      Matrix.inverse(
+        grid([
+          ['1', '2', '3'],
+          ['0', '1', '4'],
+          ['5', '6', '0'],
+        ]),
+        Algebraic.ZERO,
+        Algebraic.ONE,
+      ).toString(),
+    ).toBe('[-24, 18, 5] [20, -15, -4] [-5, 4, 1]')
+  })
+
+  it('inverts a diagonal of radicals exactly', () => {
+    const m = grid([
+      ['sqrt(2)', '0'],
+      ['0', '2'],
+    ])
+    expect(Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE).toString()).toBe('[sqrt(2)/2, 0] [0, 1/2]')
+  })
+
+  it('satisfies A·A⁻¹ = I', () => {
+    const m = grid([
+      ['2', '1'],
+      ['1', '3'],
+    ])
+    const product = Matrix.multiply(m, Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE))
+    expect(product.toString()).toBe('[1, 0] [0, 1]')
+  })
+
+  it('inverts an identity to itself', () => {
+    const identity = Matrix.identity(3, Algebraic.ZERO, Algebraic.ONE)
+    expect(Matrix.inverse(identity, Algebraic.ZERO, Algebraic.ONE).toString()).toBe(identity.toString())
+  })
+
+  it('throws notSquare for a non-square matrix', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    expect(() => Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE)).toThrow(MatrixInverseError)
+    try {
+      Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE)
+    } catch (error) {
+      expect((error as MatrixInverseError).reason).toBe('notSquare')
+    }
+  })
+
+  it('throws singular when a column has no pivot', () => {
+    const m = grid([
+      ['1', '2'],
+      ['2', '4'],
+    ])
+    try {
+      Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE)
+      throw new Error('expected the inverse to throw')
+    } catch (error) {
+      expect(error).toBeInstanceOf(MatrixInverseError)
+      expect((error as MatrixInverseError).reason).toBe('singular')
+      expect((error as MatrixInverseError).rows).toBe(2)
+      expect((error as MatrixInverseError).cols).toBe(2)
+    }
+  })
+
+  it('leaves the input matrix untouched', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    Matrix.inverse(m, Algebraic.ZERO, Algebraic.ONE)
     expect(m.toString()).toBe('[1, 2] [3, 4]')
   })
 })

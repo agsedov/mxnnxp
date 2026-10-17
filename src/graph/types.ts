@@ -11,6 +11,7 @@ export type WidgetKind =
   | 'rotation'
   | 'rowEchelon'
   | 'rref'
+  | 'inverse'
   | 'comment'
 export type PortDirection = 'input' | 'output'
 
@@ -104,6 +105,14 @@ export interface RrefWidget {
   y: number
 }
 
+/** A transform that emits the inverse of the (square) matrix on its input. */
+export interface InverseWidget {
+  id: NodeId
+  kind: 'inverse'
+  x: number
+  y: number
+}
+
 /**
  * A passive bilingual note: one text per interface language (see
  * `Locale` in `src/i18n/messages.ts` — the two locales the app ships) plus the
@@ -140,6 +149,7 @@ export type GraphNode =
   | RotationWidget
   | RowEchelonWidget
   | RrefWidget
+  | InverseWidget
   | CommentWidget
 
 export interface Connection {
@@ -179,6 +189,8 @@ export type NodeError =
       readonly mode: VectorCanvasMode
     }
   | { readonly code: 'complex'; readonly row: number; readonly col: number }
+  | { readonly code: 'inverseNotSquare'; readonly rows: number; readonly cols: number }
+  | { readonly code: 'inverseSingular'; readonly rows: number; readonly cols: number }
 
 export interface NodeEvaluation {
   /** Values produced on the widget's output slots (null = no value right now). */

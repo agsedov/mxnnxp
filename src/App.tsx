@@ -21,6 +21,7 @@ import { CommentNode } from './components/nodes/CommentNode'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import { PresetMenu } from './components/PresetMenu'
+import { InverseNode } from './components/nodes/InverseNode'
 import { RowEchelonNode } from './components/nodes/RowEchelonNode'
 import { RrefNode } from './components/nodes/RrefNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
@@ -59,6 +60,7 @@ const NODE_TYPES = {
   rotation: RotationNode,
   rowEchelon: RowEchelonNode,
   rref: RrefNode,
+  inverse: InverseNode,
   comment: CommentNode,
 }
 

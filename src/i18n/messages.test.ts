@@ -100,6 +100,21 @@ describe('labels', () => {
     )
   })
 
+  it('describes the inverse errors in the active language', () => {
+    expect(describeNodeError(t, { code: 'inverseNotSquare', rows: 2, cols: 3 }).text).toBe(
+      'Cannot invert: matrix is not square (2×3)',
+    )
+    expect(describeNodeError(tRu, { code: 'inverseNotSquare', rows: 2, cols: 3 }).text).toBe(
+      'Нельзя обратить: матрица не квадратная (2×3)',
+    )
+    expect(describeNodeError(t, { code: 'inverseSingular', rows: 2, cols: 2 }).text).toBe(
+      'Matrix is singular (2×2): no inverse exists',
+    )
+    expect(describeNodeError(tRu, { code: 'inverseSingular', rows: 2, cols: 2 }).text).toBe(
+      'Матрица вырождена (2×2): обратной не существует',
+    )
+  })
+
   it('maps every widget kind and slot to a translation key', () => {
     expect(WIDGET_TITLE_KEY.matrix).toBe('widget.matrix.title')
     expect(WIDGET_TITLE_KEY.matrixMultiply).toBe('widget.matrixMultiply.title')
@@ -115,5 +130,8 @@ describe('labels', () => {
     expect(WIDGET_TITLE_KEY.rref).toBe('widget.rref.title')
     expect(portLabelKey('rref', 'm')).toBe('widget.rref.port.m')
     expect(portLabelKey('rref', 'rref')).toBe('widget.rref.port.rref')
+    expect(WIDGET_TITLE_KEY.inverse).toBe('widget.inverse.title')
+    expect(portLabelKey('inverse', 'm')).toBe('widget.inverse.port.m')
+    expect(portLabelKey('inverse', 'inverse')).toBe('widget.inverse.port.inverse')
   })
 })

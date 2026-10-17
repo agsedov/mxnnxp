@@ -30,6 +30,10 @@ the graph.
   echelon form (RREF): exact Gauss–Jordan elimination, normalizing each pivot to
   1 and clearing its column above and below, so the result is the unique reduced
   form. Connect the output to a matrix widget to display the result.
+- **Inverse matrix widget** — takes a square matrix and emits its inverse, again
+  by exact Gauss–Jordan elimination over the exact number tower, so fractional
+  and radical entries stay exact. A non-square matrix and a singular matrix are
+  reported as errors rather than producing a value.
 - **Comment widget** — a passive rectangle that carries a bilingual note (no
   slots, never wired, never errors). Only the note in the active language is
   shown and edited; switching the language flips to the other side, and the

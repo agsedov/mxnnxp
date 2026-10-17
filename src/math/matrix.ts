@@ -14,6 +14,29 @@ export class MatrixDimensionError extends Error {
 }
 
 /**
+ * Thrown when a matrix cannot be inverted: it is not square (`notSquare`) or its
+ * rows are linearly dependent so no inverse exists (`singular`). Carries the
+ * shape so the UI can name it in the message.
+ */
+export class MatrixInverseError extends Error {
+  readonly reason: 'notSquare' | 'singular'
+  readonly rows: number
+  readonly cols: number
+
+  constructor(reason: 'notSquare' | 'singular', rows: number, cols: number) {
+    super(
+      reason === 'notSquare'
+        ? `Cannot invert: matrix is not square (${rows}×${cols})`
+        : `Cannot invert: matrix is singular (${rows}×${cols})`,
+    )
+    this.name = 'MatrixInverseError'
+    this.reason = reason
+    this.rows = rows
+    this.cols = cols
+  }
+}
+
+/**
  * A matrix of exact {@link Scalar} entries.
  *
  * Immutable: every operation returns a new matrix. Entries are stored row-major.
@@ -171,6 +194,63 @@ export class Matrix<T extends Scalar<T>> {
   /** Alias for {@link Matrix.reducedRowEchelon}. */
   static rref<T extends Scalar<T>>(matrix: Matrix<T>, one: T): Matrix<T> {
     return Matrix.reducedRowEchelon(matrix, one)
+  }
+
+  /** The `n × n` identity matrix over any field (the field's `zero` and `one`). */
+  static identity<T extends Scalar<T>>(n: number, zero: T, one: T): Matrix<T> {
+    assertPositiveSize(n, 'size')
+    const rows = Array.from({ length: n }, (_, i) =>
+      Array.from({ length: n }, (_, j) => (i === j ? one : zero)),
+    )
+    return new Matrix(n, n, rows)
+  }
+
+  /**
+   * Exact inverse of a square matrix, by Gauss–Jordan elimination on the
+   * augmented `[A | I]`: each pivot is normalized to 1 and its column cleared
+   * above and below, which turns the left block into the identity and the right
+   * block into `A⁻¹`. Never falls back to floats.
+   *
+   * Throws {@link MatrixInverseError} when the matrix is not square
+   * (`notSquare`) or when elimination finds a zero column — no inverse exists
+   * (`singular`).
+   */
+  static inverse<T extends Scalar<T>>(matrix: Matrix<T>, zero: T, one: T): Matrix<T> {
+    const n = matrix.rows
+    if (n !== matrix.cols) {
+      throw new MatrixInverseError('notSquare', matrix.rows, matrix.cols)
+    }
+    // Augment with the identity: rows[i] = [ A[i]… | I[i]… ].
+    const rows: T[][] = matrix.data.map((row, i) => [
+      ...row,
+      ...Array.from({ length: n }, (_, j) => (i === j ? one : zero)),
+    ])
+    for (let col = 0; col < n; col++) {
+      let pivot = col
+      while (pivot < n && rows[pivot][col].isZero()) {
+        pivot++
+      }
+      if (pivot === n) {
+        throw new MatrixInverseError('singular', n, n)
+      }
+      if (pivot !== col) {
+        ;[rows[pivot], rows[col]] = [rows[col], rows[pivot]]
+      }
+      const invPivot = one.div(rows[col][col])
+      for (let c = col; c < n * 2; c++) {
+        rows[col][c] = rows[col][c].mul(invPivot)
+      }
+      for (let row = 0; row < n; row++) {
+        if (row === col) continue
+        const factor = rows[row][col]
+        if (factor.isZero()) continue
+        for (let c = col; c < n * 2; c++) {
+          rows[row][c] = rows[row][c].sub(factor.mul(rows[col][c]))
+        }
+      }
+    }
+    // The left block is now the identity; return the right block.
+    return Matrix.fromRows(rows.map(row => row.slice(n)))
   }
 
   toString(): string {

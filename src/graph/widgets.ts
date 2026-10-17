@@ -1,5 +1,5 @@
 import { Algebraic, parseExact, COS_SIN_TABLE } from '../math/exact'
-import { Matrix, MatrixDimensionError } from '../math/matrix'
+import { Matrix, MatrixDimensionError, MatrixInverseError } from '../math/matrix'
 import type { CommentNodeData, GraphNode, MatrixNodeData, NodeEvaluation, RotationNodeData, VectorCanvasMode, VectorCanvasNodeData } from './types'
 import { fitsVectorMode, vectorComponents, vectorCount } from './vectorCanvas'
 
@@ -65,6 +65,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     kind: 'rref',
     inputs: [{ id: 'm' }],
     outputs: [{ id: 'rref' }],
+  },
+  inverse: {
+    kind: 'inverse',
+    inputs: [{ id: 'm' }],
+    outputs: [{ id: 'inverse' }],
   },
   // A passive note: no slots, nothing to compute or wire.
   comment: {
@@ -186,6 +191,26 @@ export function evaluateNode(
         return { outputs: { rref: null }, error: null }
       }
       return { outputs: { rref: Matrix.rref(matrix, Algebraic.ONE) }, error: null }
+    }
+    case 'inverse': {
+      const matrix = inputs.m ?? null
+      if (!matrix) {
+        return { outputs: { inverse: null }, error: null }
+      }
+      try {
+        return { outputs: { inverse: Matrix.inverse(matrix, Algebraic.ZERO, Algebraic.ONE) }, error: null }
+      } catch (error) {
+        if (error instanceof MatrixInverseError) {
+          return {
+            outputs: { inverse: null },
+            error:
+              error.reason === 'notSquare'
+                ? { code: 'inverseNotSquare', rows: error.rows, cols: error.cols }
+                : { code: 'inverseSingular', rows: error.rows, cols: error.cols },
+          }
+        }
+        throw error
+      }
     }
     case 'comment':
       // A passive rectangle: no slots, no values, no errors. Its whole state

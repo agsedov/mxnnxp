@@ -15,6 +15,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   rotation: 'widget.rotation.title',
   rowEchelon: 'widget.rowEchelon.title',
   rref: 'widget.rref.title',
+  inverse: 'widget.inverse.title',
   comment: 'widget.comment.title',
 }
 
@@ -50,6 +51,10 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
     m: 'widget.rref.port.m',
     rref: 'widget.rref.port.rref',
   },
+  inverse: {
+    m: 'widget.inverse.port.m',
+    inverse: 'widget.inverse.port.inverse',
+  },
   // A comment has no slots, so it has no port labels.
   comment: {},
 }
@@ -84,5 +89,9 @@ export function describeNodeError(t: TFunction, error: NodeError): NodeErrorText
       return { text: t('vectorCanvas.error.dim', { rows: error.rows, cols: error.cols }) }
     case 'complex':
       return { text: t('error.complex', { row: error.row, col: error.col }) }
+    case 'inverseNotSquare':
+      return { text: t('inverse.error.notSquare', { rows: error.rows, cols: error.cols }) }
+    case 'inverseSingular':
+      return { text: t('inverse.error.singular', { rows: error.rows, cols: error.cols }) }
   }
 }

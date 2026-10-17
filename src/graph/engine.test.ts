@@ -479,6 +479,65 @@ describe('rref widget', () => {
   })
 })
 
+describe('inverse widget', () => {
+  /** A matrix widget wired into an inverse widget. */
+  function inverseScene(cells: string[][]) {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'inverse', 200, 0)
+    const [matrix, inverse] = graph.nodes
+    graph = setMatrixCells(graph, matrix.id, cells)
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: inverse.id, port: 'm' })
+    return { graph, inverse }
+  }
+
+  it('emits the inverse of a square matrix', () => {
+    const { graph, inverse } = inverseScene([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    const result = evaluateGraph(graph).get(inverse.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.inverse?.toString()).toBe('[-2, 1] [3/2, -1/2]')
+  })
+
+  it('keeps radical entries exact', () => {
+    const { graph, inverse } = inverseScene([
+      ['sqrt(2)', '0'],
+      ['0', '2'],
+    ])
+    expect(evaluateGraph(graph).get(inverse.id)?.outputs.inverse?.toString()).toBe('[sqrt(2)/2, 0] [0, 1/2]')
+  })
+
+  it('reports a non-square matrix as an error', () => {
+    const { graph, inverse } = inverseScene([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    const result = evaluateGraph(graph).get(inverse.id)
+    expect(result?.outputs.inverse).toBeNull()
+    expect(result?.error).toEqual({ code: 'inverseNotSquare', rows: 2, cols: 3 })
+  })
+
+  it('reports a singular matrix as an error', () => {
+    const { graph, inverse } = inverseScene([
+      ['1', '2'],
+      ['2', '4'],
+    ])
+    const result = evaluateGraph(graph).get(inverse.id)
+    expect(result?.outputs.inverse).toBeNull()
+    expect(result?.error).toEqual({ code: 'inverseSingular', rows: 2, cols: 2 })
+  })
+
+  it('waits quietly while the input carries no value', () => {
+    const graph = addNode(createGraph(), 'inverse', 0, 0)
+    const inverse = graph.nodes[0]
+    const result = evaluateGraph(graph).get(inverse.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.inverse).toBeNull()
+  })
+})
+
 describe('comment widget', () => {
   it('starts empty in both languages', () => {
     const graph = addNode(createGraph(), 'comment', 10, 20)

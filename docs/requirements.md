@@ -50,7 +50,7 @@ The tower has two levels and one interface:
   equality is structural.
 - Both implement the `Scalar<T>` interface (field operations, `isZero`,
   `equals`, `sign`, `toString`, `toLatex`), which is what field-generic matrix
-  algorithms (`rref`/`det`/`rank`/`solve`) will be written against.
+  algorithms (`rref`/`inverse`/`det`/`rank`/`solve`) are written against.
 
 Concrete rules:
 
@@ -353,6 +353,24 @@ unaffected.
 
 ---
 
+## R15 — Inverse matrix widget
+
+- One **input slot** (`matrix`); one **output slot** (`Inverse matrix`) that
+  carries the inverse of the incoming matrix.
+- The inverse is computed by **exact Gauss–Jordan elimination** on the augmented
+  `[A | I]` (`Matrix.inverse`, written against `Scalar<T>`): the entry path never
+  falls back to floats, so an inverse with fractional or radical entries stays
+  exact.
+- The input must be **square**; a non-square matrix is an **error**
+  (`inverseNotSquare`, reporting the shape). A square but **singular** matrix —
+  one whose rows are linearly dependent — has no inverse and is likewise an
+  error (`inverseSingular`), rather than a value.
+- While the input carries no value the widget waits quietly (no error) and shows
+  only the result's shape — the values themselves are shown by whatever widget
+  the output is connected to (see R4).
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |
@@ -381,10 +399,11 @@ State ownership follows React Flow's contract:
 
 ## Future
 
-- More widgets: transpose, inverse, determinant, rank, solve, sum.
-- Field-generic linear algebra beyond RREF (`det`, `rank`, `solve`) written
-  against `Scalar<T>` and `Matrix<T>`, taking the field constants as parameters
-  (see `src/math/exact/scalar.ts`), so algorithms run over any exact field.
+- More widgets: transpose, determinant, rank, solve, sum.
+- Field-generic linear algebra beyond RREF and inverse (`det`, `rank`, `solve`)
+  written against `Scalar<T>` and `Matrix<T>`, taking the field constants as
+  parameters (see `src/math/exact/scalar.ts`), so algorithms run over any exact
+  field.
 - Characteristic polynomial and spectral/Jordan decomposition, with an explicit
   "not representable in the supported exact tower" state rather than a float.
 - Pan/zoom-aware port markers, keyboard graph navigation.

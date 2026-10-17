@@ -70,6 +70,10 @@ function nodeErrorsEqual(a: NodeError | null, b: NodeError | null): boolean {
       return b.code === 'vectorShape' && a.rows === b.rows && a.cols === b.cols && a.mode === b.mode
     case 'complex':
       return b.code === 'complex' && a.row === b.row && a.col === b.col
+    case 'inverseNotSquare':
+      return b.code === 'inverseNotSquare' && a.rows === b.rows && a.cols === b.cols
+    case 'inverseSingular':
+      return b.code === 'inverseSingular' && a.rows === b.rows && a.cols === b.cols
   }
 }
 
