@@ -17,6 +17,7 @@ import {
 import { AddWidgetMenu } from './components/AddWidgetMenu'
 import { GraphActionsContext } from './components/GraphActionsContext'
 import { LanguageSwitch } from './components/LanguageSwitch'
+import { CommentNode } from './components/nodes/CommentNode'
 import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import { PresetMenu } from './components/PresetMenu'
@@ -36,13 +37,14 @@ import {
   evaluateGraph,
   moveNode,
   removeNode,
+  updateCommentData,
   updateMatrixData,
   updateRotationData,
   updateScalarData,
   updateVectorCanvasData,
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
-import type { Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
+import type { CommentNodeData, Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
 import { graphFragment, graphFromHash, hasGraphHash, shareUrl } from './share'
 
 const NODE_TYPES = {
@@ -53,6 +55,7 @@ const NODE_TYPES = {
   vectorCanvas: VectorCanvasNode,
   rotation: RotationNode,
   rowEchelon: RowEchelonNode,
+  comment: CommentNode,
 }
 
 /** Demo scene: A × B with both factors editable. */
@@ -164,6 +167,7 @@ export default function App() {
       updateVectorCanvas: (id: NodeId, data: VectorCanvasNodeData) =>
         setGraph(current => updateVectorCanvasData(current, id, data)),
       updateRotation: (id: NodeId, data: RotationNodeData) => setGraph(current => updateRotationData(current, id, data)),
+      updateComment: (id: NodeId, data: CommentNodeData) => setGraph(current => updateCommentData(current, id, data)),
       removeNode: (id: NodeId) => setGraph(current => removeNode(current, id)),
     }),
     [],

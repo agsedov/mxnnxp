@@ -6,11 +6,12 @@ import {
   disconnect,
   evaluateGraph,
   removeNode,
+  updateCommentData,
   updateMatrixData,
   updateRotationData,
   updateVectorCanvasData,
 } from './engine'
-import { MATRIX_INPUT_PORT, defaultMatrixData, defaultRotationData } from './widgets'
+import { MATRIX_INPUT_PORT, WIDGET_SPECS, defaultCommentData, defaultMatrixData, defaultRotationData } from './widgets'
 import type { Graph, MatrixNodeData } from './types'
 
 function withCells(cells: string[][]): MatrixNodeData {
@@ -426,5 +427,49 @@ describe('row echelon widget', () => {
     const result = evaluateGraph(graph).get(ref.id)
     expect(result?.error).toBeNull()
     expect(result?.outputs.ref).toBeNull()
+  })
+})
+
+describe('comment widget', () => {
+  it('starts empty in both languages', () => {
+    const graph = addNode(createGraph(), 'comment', 10, 20)
+    const node = graph.nodes[0]
+    expect(node.kind).toBe('comment')
+    if (node.kind !== 'comment') throw new Error('expected a comment widget')
+    expect(node.data).toEqual(defaultCommentData())
+  })
+
+  it('has no slots and never errors', () => {
+    const graph = addNode(createGraph(), 'comment', 0, 0)
+    const comment = graph.nodes[0]
+    expect(WIDGET_SPECS.comment.inputs).toEqual([])
+    expect(WIDGET_SPECS.comment.outputs).toEqual([])
+
+    const result = evaluateGraph(graph).get(comment.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs).toEqual({})
+  })
+
+  it('stores both languages, one per locale', () => {
+    const graph = addNode(createGraph(), 'comment', 0, 0)
+    const comment = graph.nodes[0]
+    const updated = updateCommentData(graph, comment.id, { en: 'hello', ru: 'привет' })
+    const node = updated.nodes[0]
+    expect(node.kind === 'comment' ? node.data : null).toEqual({ en: 'hello', ru: 'привет' })
+  })
+
+  it('leaves other widgets untouched', () => {
+    let graph = addNode(createGraph(), 'comment', 0, 0)
+    graph = addNode(graph, 'matrix', 0, 200)
+    const updated = updateCommentData(graph, graph.nodes[1].id, { en: 'x', ru: 'y' })
+    expect(updated.nodes[0].kind === 'comment' ? updated.nodes[0].data : null).toEqual(defaultCommentData())
+  })
+
+  it('stores the resized width without disturbing the texts', () => {
+    const graph = addNode(createGraph(), 'comment', 0, 0)
+    const comment = graph.nodes[0]
+    const updated = updateCommentData(graph, comment.id, { en: 'note', ru: 'заметка', width: 420 })
+    const node = updated.nodes[0]
+    expect(node.kind === 'comment' ? node.data : null).toEqual({ en: 'note', ru: 'заметка', width: 420 })
   })
 })

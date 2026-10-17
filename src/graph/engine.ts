@@ -1,7 +1,8 @@
 import type { Algebraic } from '../math/exact'
 import type { Matrix } from '../math/matrix'
-import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, defaultVectorCanvasData, defaultRotationData, evaluateNode } from './widgets'
+import { WIDGET_SPECS, MATRIX_INPUT_PORT, defaultMatrixData, defaultScalarData, defaultVectorCanvasData, defaultRotationData, defaultCommentData, evaluateNode } from './widgets'
 import type {
+  CommentNodeData,
   Connection,
   Evaluation,
   Graph,
@@ -33,7 +34,9 @@ export function addNode(graph: Graph, kind: WidgetKind, x: number, y: number): G
           ? { id, kind, x, y, data: defaultVectorCanvasData() }
           : kind === 'rotation'
             ? { id, kind, x, y, data: defaultRotationData() }
-            : { id, kind, x, y }
+            : kind === 'comment'
+              ? { id, kind, x, y, data: defaultCommentData() }
+              : { id, kind, x, y }
   return { nodes: [...graph.nodes, node], connections: graph.connections }
 }
 
@@ -81,6 +84,18 @@ export function updateRotationData(graph: Graph, id: NodeId, data: RotationNodeD
   return {
     ...graph,
     nodes: graph.nodes.map(node => (node.id === id && node.kind === 'rotation' ? { ...node, data } : node)),
+  }
+}
+
+/**
+ * Replaces a comment widget's bilingual text. The active language is picked by
+ * the caller (the UI passes the one it is showing); both languages travel
+ * together so the widget keeps whatever was already written in the other one.
+ */
+export function updateCommentData(graph: Graph, id: NodeId, data: CommentNodeData): Graph {
+  return {
+    ...graph,
+    nodes: graph.nodes.map(node => (node.id === id && node.kind === 'comment' ? { ...node, data } : node)),
   }
 }
 

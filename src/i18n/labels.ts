@@ -14,6 +14,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   vectorCanvas: 'widget.vectorCanvas.title',
   rotation: 'widget.rotation.title',
   rowEchelon: 'widget.rowEchelon.title',
+  comment: 'widget.comment.title',
 }
 
 const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
@@ -44,6 +45,8 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
     m: 'widget.rowEchelon.port.m',
     ref: 'widget.rowEchelon.port.ref',
   },
+  // A comment has no slots, so it has no port labels.
+  comment: {},
 }
 
 /** Message key for a slot label. Slot ids come from `WIDGET_SPECS` and are known. */

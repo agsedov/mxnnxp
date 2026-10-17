@@ -302,6 +302,41 @@ unaffected.
 
 ---
 
+## R13 — Comment widget
+
+- A **passive rectangle**: it has no input or output slots, is never wired to
+  anything, and takes no part in evaluation — it produces no values and never
+  reports an error. It is a note on the canvas, nothing more.
+- The note is **bilingual**: it carries one text per interface language
+  (English and Russian) side by side in its data, `{ en, ru }`.
+- Only the text of the **active language is shown and edited**. Switching the
+  language switches which side is on screen and which side the editor writes
+  to; the other side is neither displayed nor touched by editing. Both sides
+  travel in the saved document, so a shared link keeps the translation.
+- While the language *not* on screen has **no text**, the widget's border turns
+  **red** — a note exists but has no translation yet. The check is against the
+  other language only: an empty active side (a blank note being written) is not
+  itself marked.
+- The body supports **inline TeX**: a `$…$` run is typeset with KaTeX
+  (`displayMode: false`), the text around it is shown verbatim, and `\$` is a
+  literal dollar. Newlines and repeated spaces are preserved.
+- There is **no widget header** (no title bar): the rectangle *is* the note,
+  with padding and a faint semi-transparent **grid** over the panel. It is
+  dragged by its body, a plain click turns it into a **textarea** over the same
+  text (the editor is `nodrag`, so the caret works), and a small button in the
+  corner removes it.
+- The box's **width** is adjustable: a gripper in the opposite corner drags it
+  within a fixed range. The width is stored on the note (`width`), so it
+  survives a save or a shared link; a note that carries no width uses the
+  default.
+- Serialization is strict like every other widget, with one deliberate
+  exception: a **missing/absent language field reads as empty text** (that is
+  exactly what "not translated yet" means to the widget), while a field that is
+  present but not a string is rejected. `width` is optional and must be a finite
+  number when present.
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |

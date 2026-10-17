@@ -1,6 +1,6 @@
 import { parseExact, COS_SIN_TABLE, type Algebraic } from '../math/exact'
 import { Matrix, MatrixDimensionError } from '../math/matrix'
-import type { GraphNode, MatrixNodeData, NodeEvaluation, RotationNodeData, VectorCanvasMode, VectorCanvasNodeData } from './types'
+import type { CommentNodeData, GraphNode, MatrixNodeData, NodeEvaluation, RotationNodeData, VectorCanvasMode, VectorCanvasNodeData } from './types'
 import { fitsVectorMode, vectorComponents, vectorCount } from './vectorCanvas'
 
 export interface PortSpec {
@@ -61,6 +61,12 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [{ id: 'm' }],
     outputs: [{ id: 'ref' }],
   },
+  // A passive note: no slots, nothing to compute or wire.
+  comment: {
+    kind: 'comment',
+    inputs: [],
+    outputs: [],
+  },
 }
 
 export function defaultMatrixData(): MatrixNodeData {
@@ -84,6 +90,21 @@ export function defaultVectorCanvasData(): VectorCanvasNodeData {
 
 export function defaultRotationData(): RotationNodeData {
   return { angle: '0' }
+}
+
+/** Width a comment box starts at, and the range it can be resized within. */
+export const DEFAULT_COMMENT_WIDTH = 260
+export const MIN_COMMENT_WIDTH = 160
+export const MAX_COMMENT_WIDTH = 720
+
+/**
+ * A new comment starts empty in both languages, at the default width. The
+ * empty text is not an error state — it is just a note whose translation has
+ * not been written yet, which the UI marks with a red border (see
+ * `CommentNode`).
+ */
+export function defaultCommentData(): CommentNodeData {
+  return { en: '', ru: '', width: DEFAULT_COMMENT_WIDTH }
 }
 
 /**
@@ -154,6 +175,10 @@ export function evaluateNode(
       // it simply waits until a value arrives on its input.
       return { outputs: { ref: matrix ? Matrix.rowEchelon(matrix) : null }, error: null }
     }
+    case 'comment':
+      // A passive rectangle: no slots, no values, no errors. Its whole state
+      // is its bilingual text, which evaluation has nothing to say about.
+      return { outputs: {}, error: null }
   }
 }
 

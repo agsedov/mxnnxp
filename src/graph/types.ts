@@ -10,6 +10,7 @@ export type WidgetKind =
   | 'vectorCanvas'
   | 'rotation'
   | 'rowEchelon'
+  | 'comment'
 export type PortDirection = 'input' | 'output'
 
 /** A reference to a slot ("port") on a widget. */
@@ -94,6 +95,33 @@ export interface RowEchelonWidget {
   y: number
 }
 
+/**
+ * A passive bilingual note: one text per interface language (see
+ * `Locale` in `src/i18n/messages.ts` — the two locales the app ships) plus the
+ * width the box has been resized to.
+ *
+ * The document carries both texts side by side, but only the one in the
+ * active language is ever shown or edited; a text may be left empty, and
+ * the UI marks the widget (red border) while the *other* language has
+ * nothing. The graph layer stays presentation-free: it stores the strings
+ * and never looks inside them.
+ */
+export interface CommentNodeData {
+  en: string
+  ru: string
+  /** Box width in canvas pixels; absent means "use the default". */
+  width?: number
+}
+
+/** A passive rectangle with bilingual text: no slots, no computation. */
+export interface CommentWidget {
+  id: NodeId
+  kind: 'comment'
+  x: number
+  y: number
+  data: CommentNodeData
+}
+
 export type GraphNode =
   | MatrixWidget
   | MatrixMultiplyWidget
@@ -102,6 +130,7 @@ export type GraphNode =
   | VectorCanvasWidget
   | RotationWidget
   | RowEchelonWidget
+  | CommentWidget
 
 export interface Connection {
   id: string

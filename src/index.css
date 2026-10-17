@@ -575,6 +575,146 @@ body {
   font-size: 1.15em;
 }
 
+.tex-inline {
+  display: inline;
+  overflow: visible;
+}
+
+/* ---------- comment widget ---------- */
+
+/*
+ * The note is a passive rectangle: padding instead of a header, a faint
+ * "blueprint" grid over the panel, a red border while the off-screen language
+ * is empty, a corner gripper that resizes the box's width.
+ */
+.comment-widget {
+  min-width: 160px;
+  padding: 14px 16px;
+  border-style: dashed;
+  background-color: var(--node-bg);
+  /* Four grid layers — fine and coarse rules on each axis — over a soft accent
+     wash. The rules are semi-transparent so the wash (and the panel behind it)
+     shows through; the wash itself fades out toward the corners. */
+  background-image:
+    linear-gradient(to right, rgba(122, 162, 247, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(122, 162, 247, 0.16) 1px, transparent 1px),
+    linear-gradient(to right, rgba(122, 162, 247, 0.28) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(122, 162, 247, 0.28) 1px, transparent 1px),
+    radial-gradient(120% 120% at 0% 0%, rgba(122, 162, 247, 0.16), transparent 62%);
+  background-size:
+    14px 14px,
+    14px 14px,
+    70px 70px,
+    70px 70px,
+    100% 100%;
+  background-clip: padding-box;
+}
+
+.comment-widget:hover,
+.comment-widget.widget-selected {
+  border-style: solid;
+}
+
+/* While the language off screen has no text: the note wants a translation. */
+.comment-untranslated {
+  border-color: var(--error);
+}
+
+.comment-remove {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 2;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.comment-widget:hover .comment-remove,
+.comment-widget.widget-selected .comment-remove {
+  opacity: 1;
+}
+
+.comment-remove:hover {
+  color: var(--error);
+  background: rgba(247, 118, 142, 0.14);
+}
+
+.comment-text {
+  min-height: 22px;
+  padding-right: 16px;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.comment-text-empty {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.comment-editor {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  background: rgba(17, 20, 27, 0.85);
+  border: 1px solid var(--node-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.45;
+  resize: none;
+}
+
+.comment-editor:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/*
+ * The resize gripper: a hatched, half-transparent corner triangle. Dragging it
+ * changes the box's width (the textarea deliberately cannot be resized by the
+ * browser, so there is one way to size a note).
+ */
+.comment-resize {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  opacity: 0.45;
+  background-image: repeating-linear-gradient(
+    315deg,
+    var(--text-dim) 0,
+    var(--text-dim) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+.comment-resize:hover {
+  opacity: 1;
+  background-image: repeating-linear-gradient(
+    315deg,
+    var(--accent) 0,
+    var(--accent) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
 /* ---------- mobile ---------- */
 
 @media (max-width: 720px) {

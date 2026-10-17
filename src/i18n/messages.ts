@@ -55,6 +55,7 @@ export const en = {
   'widget.vectorCanvas.title': 'Vector canvas',
   'widget.rotation.title': '2D Rotation matrix',
   'widget.rowEchelon.title': 'Row echelon form',
+  'widget.comment.title': 'Comment',
   'widget.remove': 'Remove widget',
 
   'widget.matrix.port.in': 'in',
@@ -97,6 +98,8 @@ export const en = {
   'vectorCanvas.error.dim': 'Vector canvas needs 2 columns (or 2 rows), got {rows}×{cols}',
   'vectorCanvas.error.type': 'Waiting for a 2D matrix (each vector has 2 components)',
   'rotation.angle': 'Angle',
+  'comment.placeholder': 'Text (inline TeX between $…$)',
+  'comment.resize': 'Drag to resize',
   'conjunction.and': 'and',
 
   'error.cycle': 'Cycle detected',
@@ -131,6 +134,7 @@ export const ru: Messages = {
   'widget.vectorCanvas.title': 'Векторный холст',
   'widget.rotation.title': 'Матрица поворота 2D',
   'widget.rowEchelon.title': 'Ступенчатый вид',
+  'widget.comment.title': 'Комментарий',
   'widget.remove': 'Удалить виджет',
 
   'widget.matrix.port.in': 'вход',
@@ -173,6 +177,8 @@ export const ru: Messages = {
   'vectorCanvas.error.dim': 'Нужна матрица 2×n или n×2, получено {rows}×{cols}',
   'vectorCanvas.error.type': 'Ожидание матрицы размерности 2D (каждый вектор — 2 компоненты)',
   'rotation.angle': 'Угол',
+  'comment.placeholder': 'Текст (встроенный TeX между $…$)',
+  'comment.resize': 'Потяните, чтобы изменить ширину',
   'conjunction.and': 'и',
 
   'error.cycle': 'Обнаружен цикл',

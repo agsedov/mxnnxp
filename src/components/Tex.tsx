@@ -21,6 +21,12 @@ const KATEX_OPTIONS = {
   output: 'htmlAndMathml',
 } as const
 
+/** Same, but typeset in the line of text (comment bodies) rather than centred. */
+const KATEX_INLINE_OPTIONS = {
+  ...KATEX_OPTIONS,
+  displayMode: false,
+} as const
+
 /**
  * Renders a LaTeX string (a matrix, a value) with KaTeX.
  *
@@ -28,11 +34,22 @@ const KATEX_OPTIONS = {
  * queued typesetting pass — which is exactly why it is used here: there is no
  * asynchronous update cycle to keep in sync with React. The MathML output also
  * carries the LaTeX source, which is handy for tests and screen readers.
+ *
+ * `inline` typesets inside a line of prose instead of centring in a block; it
+ * is what `RichText` uses for the `$…$` runs of a comment.
  */
-export function Tex({ latex }: { latex: string }) {
-  const html = useMemo(() => katex.renderToString(latex, KATEX_OPTIONS), [latex])
+export function Tex({ latex, inline = false }: { latex: string; inline?: boolean }) {
+  const html = useMemo(
+    () => katex.renderToString(latex, inline ? KATEX_INLINE_OPTIONS : KATEX_OPTIONS),
+    [latex, inline],
+  )
   // Freezing is "the first render wins": with the flag on, later values are
   // simply dropped instead of being typeset again.
   const [frozen] = useState(html)
-  return <div className="tex" dangerouslySetInnerHTML={{ __html: FREEZE_TEX_UPDATES ? frozen : html }} />
+  return (
+    <div
+      className={inline ? 'tex tex-inline' : 'tex'}
+      dangerouslySetInnerHTML={{ __html: FREEZE_TEX_UPDATES ? frozen : html }}
+    />
+  )
 }

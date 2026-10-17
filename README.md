@@ -26,6 +26,13 @@ the graph.
   exact Gaussian elimination over the exact number tower, with row swaps where
   the pivot position holds a zero and the pivots kept unscaled. Connect the
   output to a matrix widget to display the result.
+- **Comment widget** — a passive rectangle that carries a bilingual note (no
+  slots, never wired, never errors). Only the note in the active language is
+  shown and edited; switching the language flips to the other side, and the
+  border turns red while that other side is still empty — a translation that
+  has not been written yet. The body renders inline TeX (`$…$`), so a note can
+  typeset a formula as well as say something about it; drag the corner gripper
+  to set the box width (kept in the saved/shared document).
 - **Exact numbers** — all values are exact, never floating point. The math layer
   implements a number tower in `src/math/exact/`: `Rational` (exact rationals on
   `BigInt`, so no 2^53 ceiling) and `Algebraic` (exact algebraic numbers such as

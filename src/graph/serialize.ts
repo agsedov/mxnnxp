@@ -131,6 +131,22 @@ function parseNode(value: unknown, where: string): GraphNode {
       const data = asRecord(record.data, `${where}.data`)
       return { id, kind: widgetKind, x, y, data: { angle: asString(data.angle, `${where}.data.angle`) } }
     }
+    case 'comment': {
+      const data = asRecord(record.data, `${where}.data`)
+      // A missing side reads as empty text — exactly what "not translated
+      // yet" means to the widget, so a hand-written payload may omit one.
+      return {
+        id,
+        kind: widgetKind,
+        x,
+        y,
+        data: {
+          en: asOptionalString(data.en, `${where}.data.en`),
+          ru: asOptionalString(data.ru, `${where}.data.ru`),
+          width: asOptionalNumber(data.width, `${where}.data.width`),
+        },
+      }
+    }
     case 'rowEchelon':
       return { id, kind: widgetKind, x, y }
     case 'matrixMultiply':
@@ -205,6 +221,16 @@ function asArray(value: unknown, where: string): unknown[] {
 function asString(value: unknown, where: string): string {
   if (typeof value !== 'string') fail(`${where} is not a string`)
   return value
+}
+
+/** A string that may simply be absent from the payload, in which case it reads as `''`. */
+function asOptionalString(value: unknown, where: string): string {
+  return value === undefined ? '' : asString(value, where)
+}
+
+/** A number that may be absent from the payload, in which case it reads as `undefined`. */
+function asOptionalNumber(value: unknown, where: string): number | undefined {
+  return value === undefined ? undefined : asNumber(value, where)
 }
 
 function asNumber(value: unknown, where: string): number {

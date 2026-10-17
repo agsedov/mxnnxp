@@ -4,6 +4,7 @@ import {
   connect,
   createGraph,
   evaluateGraph,
+  updateCommentData,
   updateMatrixData,
   updateRotationData,
   updateScalarData,
@@ -24,7 +25,8 @@ function sampleGraph(): Graph {
   graph = addNode(graph, 'scalarMultiply', 360, 700)
   graph = addNode(graph, 'vectorCanvas', 780, 300)
   graph = addNode(graph, 'rowEchelon', 430, 480)
-  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref] = graph.nodes
+  graph = addNode(graph, 'comment', 780, 560)
+  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref, comment] = graph.nodes
 
   // '√2' is unicode *and* parses, so this proves UTF-8 survives the round trip.
   graph = updateMatrixData(graph, a.id, { rows: 2, cols: 2, cells: [['√2', '0'], ['0', '√2']] })
@@ -32,6 +34,8 @@ function sampleGraph(): Graph {
   graph = updateScalarData(graph, scalar.id, '1/3')
   graph = updateVectorCanvasData(graph, canvas.id, { mode: 'rows' })
   graph = updateRotationData(graph, rotation.id, { angle: 'pi/6' })
+  // Cyrillic *and* inline TeX, so both sides of the bilingual note are exercised.
+  graph = updateCommentData(graph, comment.id, { en: 'the norm $\\sqrt{2}$', ru: 'норма $\\sqrt{2}$', width: 300 })
 
   graph = connect(graph, { node: rotation.id, port: 'm' }, { node: driven.id, port: 'in' })
   graph = connect(graph, { node: rotation.id, port: 'm' }, { node: canvas.id, port: 'm' })
@@ -195,6 +199,32 @@ describe('deserializeGraph', () => {
     await expect(deserializeGraph(await payload(nodes, [wire('a', 'b'), wire('b', 'a')]))).rejects.toThrow(
       /Duplicate connection id/,
     )
+  })
+
+  it('reads a comment side that is missing as empty text', async () => {
+    const node = { id: 'c', kind: 'comment', x: 0, y: 0, data: { en: 'note' } }
+    const graph = await deserializeGraph(await payload([node]))
+    expect(graph.nodes[0].kind === 'comment' ? graph.nodes[0].data : null).toEqual({ en: 'note', ru: '' })
+  })
+
+  it('round-trips a comment width, and leaves it absent when the payload has none', async () => {
+    const sized = { id: 'c', kind: 'comment', x: 0, y: 0, data: { en: 'a', ru: 'б', width: 420 } }
+    const sizedGraph = await deserializeGraph(await payload([sized]))
+    expect(sizedGraph.nodes[0].kind === 'comment' ? sizedGraph.nodes[0].data.width : null).toBe(420)
+
+    const unsized = { id: 'c', kind: 'comment', x: 0, y: 0, data: { en: 'a', ru: 'б' } }
+    const unsizedGraph = await deserializeGraph(await payload([unsized]))
+    expect(unsizedGraph.nodes[0].kind === 'comment' ? unsizedGraph.nodes[0].data.width : 'missing').toBeUndefined()
+  })
+
+  it('rejects a comment side that is not a string', async () => {
+    const node = { id: 'c', kind: 'comment', x: 0, y: 0, data: { en: 5, ru: '' } }
+    await expect(deserializeGraph(await payload([node]))).rejects.toThrow(/data.en is not a string/)
+  })
+
+  it('rejects a comment width that is not a number', async () => {
+    const node = { id: 'c', kind: 'comment', x: 0, y: 0, data: { en: '', ru: '', width: 'wide' } }
+    await expect(deserializeGraph(await payload([node]))).rejects.toThrow(/data.width is not a finite number/)
   })
 })
 

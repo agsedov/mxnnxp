@@ -12,6 +12,7 @@ const ADDABLE_WIDGETS: readonly WidgetKind[] = [
   'scalarMultiply',
   'vectorCanvas',
   'rotation',
+  'comment',
 ]
 
 /**
