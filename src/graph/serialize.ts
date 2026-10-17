@@ -148,11 +148,9 @@ function parseNode(value: unknown, where: string): GraphNode {
       }
     }
     case 'rowEchelon':
-      return { id, kind: widgetKind, x, y }
     case 'rref':
-      return { id, kind: widgetKind, x, y }
     case 'inverse':
-      return { id, kind: widgetKind, x, y }
+    case 'transpose':
     case 'matrixMultiply':
     case 'scalarMultiply':
       return { id, kind: widgetKind, x, y }

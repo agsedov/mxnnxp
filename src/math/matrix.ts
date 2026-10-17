@@ -92,6 +92,18 @@ export class Matrix<T extends Scalar<T>> {
   }
 
   /**
+   * The transpose: entry (i, j) becomes (j, i), so an m×n matrix yields an n×m
+   * one. A pure reshuffle — no arithmetic, so it is exact for any field and
+   * needs no field constants.
+   */
+  static transpose<T extends Scalar<T>>(matrix: Matrix<T>): Matrix<T> {
+    const data = Array.from({ length: matrix.cols }, (_, i) =>
+      Array.from({ length: matrix.rows }, (_, j) => matrix.get(j, i)),
+    )
+    return new Matrix(matrix.cols, matrix.rows, data)
+  }
+
+  /**
    * Exact matrix product. Throws {@link MatrixDimensionError} when a.cols !== b.rows.
    *
    * The accumulator starts from the first product rather than a zero constant, so

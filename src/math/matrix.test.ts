@@ -78,6 +78,47 @@ describe('Matrix.multiply', () => {
   })
 })
 
+describe('Matrix.transpose', () => {
+  it('flips a non-square matrix, swapping its shape', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    const t = Matrix.transpose(m)
+    expect(t.rows).toBe(3)
+    expect(t.cols).toBe(2)
+    expect(t.toString()).toBe('[1, 4] [2, 5] [3, 6]')
+  })
+
+  it('leaves a matrix unchanged when transposed twice', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    expect(Matrix.transpose(Matrix.transpose(m)).toString()).toBe(m.toString())
+  })
+
+  it('keeps fractions, radicals and complex numbers exact', () => {
+    expect(
+      Matrix.transpose(
+        grid([
+          ['1/2', 'sqrt(2)'],
+          ['1 - i', '3'],
+        ]),
+      ).toString(),
+    ).toBe('[1/2, 1 - i] [sqrt(2), 3]')
+  })
+
+  it('leaves the input matrix untouched', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    Matrix.transpose(m)
+    expect(m.toString()).toBe('[1, 2] [3, 4]')
+  })
+})
+
 describe('Matrix.rowEchelon', () => {
   it('eliminates below the pivot, keeping the pivot as computed', () => {
     const m = grid([

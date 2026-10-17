@@ -71,6 +71,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     inputs: [{ id: 'm' }],
     outputs: [{ id: 'inverse' }],
   },
+  transpose: {
+    kind: 'transpose',
+    inputs: [{ id: 'm' }],
+    outputs: [{ id: 'transpose' }],
+  },
   // A passive note: no slots, nothing to compute or wire.
   comment: {
     kind: 'comment',
@@ -211,6 +216,12 @@ export function evaluateNode(
         }
         throw error
       }
+    }
+    case 'transpose': {
+      const matrix = inputs.m ?? null
+      // Any matrix has a transpose, so this widget never errors — it simply
+      // waits until a value arrives on its input.
+      return { outputs: { transpose: matrix ? Matrix.transpose(matrix) : null }, error: null }
     }
     case 'comment':
       // A passive rectangle: no slots, no values, no errors. Its whole state

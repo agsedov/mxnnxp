@@ -10,6 +10,7 @@ const ADDABLE_WIDGETS: readonly WidgetKind[] = [
   'rowEchelon',
   'rref',
   'inverse',
+  'transpose',
   'scalar',
   'scalarMultiply',
   'vectorCanvas',

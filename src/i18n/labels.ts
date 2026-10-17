@@ -16,6 +16,7 @@ export const WIDGET_TITLE_KEY: Record<WidgetKind, MessageKey> = {
   rowEchelon: 'widget.rowEchelon.title',
   rref: 'widget.rref.title',
   inverse: 'widget.inverse.title',
+  transpose: 'widget.transpose.title',
   comment: 'widget.comment.title',
 }
 
@@ -54,6 +55,10 @@ const PORT_LABEL_KEY: Record<WidgetKind, Record<string, MessageKey>> = {
   inverse: {
     m: 'widget.inverse.port.m',
     inverse: 'widget.inverse.port.inverse',
+  },
+  transpose: {
+    m: 'widget.transpose.port.m',
+    transpose: 'widget.transpose.port.transpose',
   },
   // A comment has no slots, so it has no port labels.
   comment: {},

@@ -27,8 +27,9 @@ function sampleGraph(): Graph {
   graph = addNode(graph, 'rowEchelon', 430, 480)
   graph = addNode(graph, 'rref', 430, 640)
   graph = addNode(graph, 'inverse', 430, 760)
+  graph = addNode(graph, 'transpose', 430, 900)
   graph = addNode(graph, 'comment', 780, 560)
-  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref, rref, inverse, comment] =
+  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref, rref, inverse, transpose, comment] =
     graph.nodes
 
   // '√2' is unicode *and* parses, so this proves UTF-8 survives the round trip.
@@ -49,6 +50,7 @@ function sampleGraph(): Graph {
   graph = connect(graph, { node: b.id, port: 'm' }, { node: ref.id, port: 'm' })
   graph = connect(graph, { node: b.id, port: 'm' }, { node: rref.id, port: 'm' })
   graph = connect(graph, { node: b.id, port: 'm' }, { node: inverse.id, port: 'm' })
+  graph = connect(graph, { node: b.id, port: 'm' }, { node: transpose.id, port: 'm' })
   return graph
 }
 

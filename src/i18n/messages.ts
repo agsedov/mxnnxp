@@ -57,6 +57,7 @@ export const en = {
   'widget.rowEchelon.title': 'Row echelon form',
   'widget.rref.title': 'Reduced row echelon form',
   'widget.inverse.title': 'Inverse matrix',
+  'widget.transpose.title': 'Transpose',
   'widget.comment.title': 'Comment',
   'widget.remove': 'Remove widget',
 
@@ -77,6 +78,8 @@ export const en = {
   'widget.rref.port.rref': 'Reduced row echelon form',
   'widget.inverse.port.m': 'matrix',
   'widget.inverse.port.inverse': 'Inverse matrix',
+  'widget.transpose.port.m': 'matrix',
+  'widget.transpose.port.transpose': 'Transpose',
 
   'matrix.driven': 'driven by input',
   'matrix.waiting': 'waiting for input',
@@ -96,6 +99,7 @@ export const en = {
   'rowEchelon.waiting': 'waiting for {ports}',
   'rref.waiting': 'waiting for {ports}',
   'inverse.waiting': 'waiting for {ports}',
+  'transpose.waiting': 'waiting for {ports}',
   'vectorCanvas.mode.label': 'Mode',
   'vectorCanvas.mode.rows': 'Rows as vectors (2D)',
   'vectorCanvas.mode.cols': 'Columns as vectors (2D)',
@@ -146,6 +150,7 @@ export const ru: Messages = {
   'widget.rowEchelon.title': 'Ступенчатый вид',
   'widget.rref.title': 'Приведённый ступенчатый вид',
   'widget.inverse.title': 'Обратная матрица',
+  'widget.transpose.title': 'Транспонирование',
   'widget.comment.title': 'Комментарий',
   'widget.remove': 'Удалить виджет',
 
@@ -166,6 +171,8 @@ export const ru: Messages = {
   'widget.rref.port.rref': 'Приведённый ступенчатый вид',
   'widget.inverse.port.m': 'матрица',
   'widget.inverse.port.inverse': 'Обратная матрица',
+  'widget.transpose.port.m': 'матрица',
+  'widget.transpose.port.transpose': 'Транспонированная матрица',
 
   'matrix.driven': 'управляется входом',
   'matrix.waiting': 'ожидание входа',
@@ -185,6 +192,7 @@ export const ru: Messages = {
   'rowEchelon.waiting': 'ожидание: {ports}',
   'rref.waiting': 'ожидание: {ports}',
   'inverse.waiting': 'ожидание: {ports}',
+  'transpose.waiting': 'ожидание: {ports}',
   'vectorCanvas.mode.label': 'Режим',
   'vectorCanvas.mode.rows': 'Строки как векторы (2D)',
   'vectorCanvas.mode.cols': 'Столбцы как векторы (2D)',

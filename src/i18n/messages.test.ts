@@ -133,5 +133,8 @@ describe('labels', () => {
     expect(WIDGET_TITLE_KEY.inverse).toBe('widget.inverse.title')
     expect(portLabelKey('inverse', 'm')).toBe('widget.inverse.port.m')
     expect(portLabelKey('inverse', 'inverse')).toBe('widget.inverse.port.inverse')
+    expect(WIDGET_TITLE_KEY.transpose).toBe('widget.transpose.title')
+    expect(portLabelKey('transpose', 'm')).toBe('widget.transpose.port.m')
+    expect(portLabelKey('transpose', 'transpose')).toBe('widget.transpose.port.transpose')
   })
 })

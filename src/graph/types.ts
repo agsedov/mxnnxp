@@ -12,6 +12,7 @@ export type WidgetKind =
   | 'rowEchelon'
   | 'rref'
   | 'inverse'
+  | 'transpose'
   | 'comment'
 export type PortDirection = 'input' | 'output'
 
@@ -113,6 +114,14 @@ export interface InverseWidget {
   y: number
 }
 
+/** A transform that emits the transpose of the matrix on its input. */
+export interface TransposeWidget {
+  id: NodeId
+  kind: 'transpose'
+  x: number
+  y: number
+}
+
 /**
  * A passive bilingual note: one text per interface language (see
  * `Locale` in `src/i18n/messages.ts` — the two locales the app ships) plus the
@@ -150,6 +159,7 @@ export type GraphNode =
   | RowEchelonWidget
   | RrefWidget
   | InverseWidget
+  | TransposeWidget
   | CommentWidget
 
 export interface Connection {

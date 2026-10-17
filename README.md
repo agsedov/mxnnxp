@@ -34,6 +34,9 @@ the graph.
   by exact Gauss–Jordan elimination over the exact number tower, so fractional
   and radical entries stay exact. A non-square matrix and a singular matrix are
   reported as errors rather than producing a value.
+- **Transpose widget** — takes a matrix and emits its transpose (m×n becomes
+  n×m): a pure reshuffle of the entries, so it is exact for any field and never
+  errors on content. Connect the output to a matrix widget to display the result.
 - **Comment widget** — a passive rectangle that carries a bilingual note (no
   slots, never wired, never errors). Only the note in the active language is
   shown and edited; switching the language flips to the other side, and the

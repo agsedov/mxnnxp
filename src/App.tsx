@@ -26,6 +26,7 @@ import { RowEchelonNode } from './components/nodes/RowEchelonNode'
 import { RrefNode } from './components/nodes/RrefNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
+import { TransposeNode } from './components/nodes/TransposeNode'
 import { VectorCanvasNode } from './components/nodes/VectorCanvasNode'
 import { RotationNode } from './components/nodes/RotationNode'
 import type { FlowNode } from './components/flowTypes'
@@ -61,6 +62,7 @@ const NODE_TYPES = {
   rowEchelon: RowEchelonNode,
   rref: RrefNode,
   inverse: InverseNode,
+  transpose: TransposeNode,
   comment: CommentNode,
 }
 

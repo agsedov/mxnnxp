@@ -538,6 +538,47 @@ describe('inverse widget', () => {
   })
 })
 
+describe('transpose widget', () => {
+  /** A matrix widget wired into a transpose widget. */
+  function transposeScene(cells: string[][]) {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'transpose', 200, 0)
+    const [matrix, transpose] = graph.nodes
+    graph = setMatrixCells(graph, matrix.id, cells)
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: transpose.id, port: 'm' })
+    return { graph, transpose }
+  }
+
+  it('emits the transpose of the incoming matrix', () => {
+    const { graph, transpose } = transposeScene([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    const result = evaluateGraph(graph).get(transpose.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.transpose?.toString()).toBe('[1, 4] [2, 5] [3, 6]')
+  })
+
+  it('keeps radical and complex entries exact', () => {
+    const { graph, transpose } = transposeScene([
+      ['sqrt(2)', '1 - i'],
+      ['1/2', '3'],
+    ])
+    expect(evaluateGraph(graph).get(transpose.id)?.outputs.transpose?.toString()).toBe(
+      '[sqrt(2), 1/2] [1 - i, 3]',
+    )
+  })
+
+  it('waits quietly while the input carries no value', () => {
+    const graph = addNode(createGraph(), 'transpose', 0, 0)
+    const transpose = graph.nodes[0]
+    const result = evaluateGraph(graph).get(transpose.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.transpose).toBeNull()
+  })
+})
+
 describe('comment widget', () => {
   it('starts empty in both languages', () => {
     const graph = addNode(createGraph(), 'comment', 10, 20)

@@ -371,6 +371,20 @@ unaffected.
 
 ---
 
+## R16 — Transpose widget
+
+- One **input slot** (`matrix`); one **output slot** (`Transpose`) that carries
+  the transpose of the incoming matrix (entry (i, j) moves to (j, i), so an m×n
+  matrix yields an n×m one).
+- The transpose is a pure reshuffle (`Matrix.transpose`) — no arithmetic runs, so
+  it is exact for any field and needs no field constants.
+- Any matrix has a transpose, so the widget never errors on content; it waits
+  quietly (no error) while the input carries no value and shows only the result's
+  shape — the values themselves are shown by whatever widget the output is
+  connected to (see R4).
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |
@@ -399,7 +413,7 @@ State ownership follows React Flow's contract:
 
 ## Future
 
-- More widgets: transpose, determinant, rank, solve, sum.
+- More widgets: determinant, rank, solve, sum.
 - Field-generic linear algebra beyond RREF and inverse (`det`, `rank`, `solve`)
   written against `Scalar<T>` and `Matrix<T>`, taking the field constants as
   parameters (see `src/math/exact/scalar.ts`), so algorithms run over any exact
