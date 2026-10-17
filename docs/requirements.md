@@ -238,13 +238,22 @@ unaffected.
 - A **Share link** button in the toolbar copies a link to the current canvas
   (widgets, content, positions and wires). Where the clipboard is unavailable,
   it puts the link in the address bar instead.
+- A **hidden hotkey** — `Ctrl + Shift + G` (`⌘ + Shift + G` on macOS) — copies
+  the current scene to the clipboard as the **bare `g=…` fragment**, the exact
+  string a share link carries after its `#`, ready to be pasted onto any link
+  to the app (or saved as a preset file, see R12). It is deliberately absent
+  from the UI — no button, hint or toast — stays silent when the clipboard is
+  unavailable (no fallback, unlike the Share link button), and never fires
+  while focus is inside an editable widget cell. `graphFragment` in
+  `src/share.ts` produces the string.
 - Decoding is **strict**: not valid base64url/JSON, another format version, an
   unknown widget kind or slot, a wire to a missing widget or to itself,
   duplicate ids, or matrix cells that disagree with the declared size are all
   rejected with a `GraphSerializationError` — never a half-restored canvas.
 - The helpers are pure and live in the Graph layer: `serializeGraph`,
   `deserializeGraph` and `tryDeserializeGraph` in `src/graph/serialize.ts`; the
-  URL fragment plumbing (`graphFromHash`, `shareUrl`) is in `src/share.ts`.
+  URL fragment plumbing (`graphFragment`, `graphFromHash`, `shareUrl`) is in
+  `src/share.ts`.
 
 ---
 

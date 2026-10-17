@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addNode, createGraph, updateMatrixData } from './graph/engine'
 import type { Graph } from './graph/types'
-import { graphFromHash, hasGraphHash, shareUrl } from './share'
+import { graphFragment, graphFromHash, hasGraphHash, shareUrl } from './share'
 
 function smallGraph(): Graph {
   let graph = addNode(createGraph(), 'matrix', 60, 80)
@@ -26,6 +26,20 @@ describe('shareUrl', () => {
   it('produces a fragment that needs no percent-escaping beyond the payload alphabet', async () => {
     const hash = new URL(await shareUrl('https://example.test/', smallGraph())).hash
     expect(hash).toMatch(/^#g=[A-Za-z0-9_-]+$/)
+  })
+})
+
+describe('graphFragment', () => {
+  it('produces the bare `g=…` string a share link carries after its `#`', async () => {
+    const graph = smallGraph()
+    const fragment = await graphFragment(graph)
+    expect(fragment).toMatch(/^g=[A-Za-z0-9_-]+$/)
+    expect(`#${fragment}`).toBe(new URL(await shareUrl('https://example.test/', graph)).hash)
+  })
+
+  it('decodes back into the same graph via graphFromHash', async () => {
+    const graph = smallGraph()
+    expect(await graphFromHash(`#${await graphFragment(graph)}`)).toEqual(graph)
   })
 })
 

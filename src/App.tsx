@@ -43,7 +43,7 @@ import {
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
 import type { Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
-import { graphFromHash, hasGraphHash, shareUrl } from './share'
+import { graphFragment, graphFromHash, hasGraphHash, shareUrl } from './share'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -205,6 +205,26 @@ export default function App() {
     const timer = window.setTimeout(() => setLinkCopied(false), 1600)
     return () => window.clearTimeout(timer)
   }, [linkCopied])
+
+  // Secret hotkey (Ctrl/Cmd + Shift + G): puts the current scene in the
+  // clipboard as the bare `g=…` fragment — the very string a share link carries
+  // after its `#` — ready to be pasted onto any link to this app. Kept out of
+  // the UI and silent on purpose: if the clipboard is unavailable (no permission,
+  // insecure context), nothing happens. Skipped while typing in a widget, so it
+  // never fires inside an editable cell.
+  useEffect(() => {
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 'g' || !event.shiftKey || !(event.ctrlKey || event.metaKey)) return
+      const target = event.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+      event.preventDefault()
+      void graphFragment(graph)
+        .then(fragment => navigator.clipboard.writeText(fragment))
+        .catch(() => {})
+    }
+    window.addEventListener('keydown', onKeydown)
+    return () => window.removeEventListener('keydown', onKeydown)
+  }, [graph])
 
   // Read the graph a link carries: once on boot, then again on every later
   // fragment change — opening a shared link in an already-open tab is only a

@@ -38,9 +38,18 @@ export async function graphFromHash(hash: string): Promise<Graph | null> {
   return payload === null ? null : tryDeserializeGraph(payload)
 }
 
+/**
+ * The bare fragment for `graph`, e.g. `g=<deflated base64url>` — the exact string
+ * a share link carries after its `#`. Useful on its own: it can be pasted after
+ * any link to the app without having to strip a full URL apart first.
+ */
+export async function graphFragment(graph: Graph): Promise<string> {
+  return new URLSearchParams({ [GRAPH_HASH_KEY]: await serializeGraph(graph) }).toString()
+}
+
 /** The shareable link for `graph`: `href` with its fragment replaced by the graph. */
 export async function shareUrl(href: string, graph: Graph): Promise<string> {
   const url = new URL(href)
-  url.hash = new URLSearchParams({ [GRAPH_HASH_KEY]: await serializeGraph(graph) }).toString()
+  url.hash = await graphFragment(graph)
   return url.toString()
 }

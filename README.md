@@ -51,6 +51,11 @@ the graph.
   URL fragment (`#g=<base64url>`), so opening such a link rebuilds the scene and
   recomputes every value exactly; a link with no valid graph falls back to the
   demo scene. See `src/graph/serialize.ts`.
+- **Hidden hotkey** — `Ctrl + Shift + G` (`⌘ + Shift + G` on macOS) copies the
+  current scene as the bare `g=<base64url>` fragment itself — the string a
+  share link carries after its `#` — ready to paste onto any link to the app or
+  into `presets/<name>.txt`. It is intentionally not shown anywhere in the UI
+  and stays silent if the clipboard is unavailable.
 
 ## Stack
 
