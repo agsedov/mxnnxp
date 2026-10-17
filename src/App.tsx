@@ -22,6 +22,7 @@ import { MatrixNode } from './components/nodes/MatrixNode'
 import { MultiplyNode } from './components/nodes/MultiplyNode'
 import { PresetMenu } from './components/PresetMenu'
 import { RowEchelonNode } from './components/nodes/RowEchelonNode'
+import { RrefNode } from './components/nodes/RrefNode'
 import { ScalarNode } from './components/nodes/ScalarNode'
 import { ScalarMultiplyNode } from './components/nodes/ScalarMultiplyNode'
 import { VectorCanvasNode } from './components/nodes/VectorCanvasNode'
@@ -57,6 +58,7 @@ const NODE_TYPES = {
   vectorCanvas: VectorCanvasNode,
   rotation: RotationNode,
   rowEchelon: RowEchelonNode,
+  rref: RrefNode,
   comment: CommentNode,
 }
 

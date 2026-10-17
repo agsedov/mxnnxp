@@ -129,6 +129,50 @@ export class Matrix<T extends Scalar<T>> {
     return Matrix.fromRows(rows)
   }
 
+  /**
+   * Reduced row echelon form (RREF) by Gauss–Jordan elimination over any
+   * exact field.
+   *
+   * Pivots are scaled to 1, and elimination is performed above and below each
+   * pivot. All-zero rows sink to the bottom.
+   */
+  static reducedRowEchelon<T extends Scalar<T>>(matrix: Matrix<T>, one: T): Matrix<T> {
+    const rows = matrix.data.map(row => [...row])
+    let pivotRow = 0
+    for (let col = 0; col < matrix.cols && pivotRow < matrix.rows; col++) {
+      let pivot = pivotRow
+      while (pivot < matrix.rows && rows[pivot][col].isZero()) {
+        pivot++
+      }
+      if (pivot === matrix.rows) continue // zero column
+      if (pivot !== pivotRow) {
+        ;[rows[pivot], rows[pivotRow]] = [rows[pivotRow], rows[pivot]]
+      }
+      const pivotValue = rows[pivotRow][col]
+      // Scale pivot row so pivot becomes 1
+      const invPivot = one.div(pivotValue)
+      for (let c = col; c < matrix.cols; c++) {
+        rows[pivotRow][c] = rows[pivotRow][c].mul(invPivot)
+      }
+      // Eliminate above and below
+      for (let row = 0; row < matrix.rows; row++) {
+        if (row === pivotRow) continue
+        const factor = rows[row][col]
+        if (factor.isZero()) continue
+        for (let c = col; c < matrix.cols; c++) {
+          rows[row][c] = rows[row][c].sub(factor.mul(rows[pivotRow][c]))
+        }
+      }
+      pivotRow++
+    }
+    return Matrix.fromRows(rows)
+  }
+
+  /** Alias for {@link Matrix.reducedRowEchelon}. */
+  static rref<T extends Scalar<T>>(matrix: Matrix<T>, one: T): Matrix<T> {
+    return Matrix.reducedRowEchelon(matrix, one)
+  }
+
   toString(): string {
     return this.data.map(row => `[${row.join(', ')}]`).join(' ')
   }

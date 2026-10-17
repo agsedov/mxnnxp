@@ -337,6 +337,22 @@ unaffected.
 
 ---
 
+## R14 — Reduced row echelon form widget
+
+- One **input slot** (`matrix`); one **output slot** (`Reduced row echelon form`)
+  that carries the reduced row echelon form (RREF) of the incoming matrix.
+- RREF is computed by **exact Gauss–Jordan elimination** (`Matrix.rref`, written
+  against `Scalar<T>`): each pivot is **normalized to 1** and its column is
+  cleared both above and below, so the result is the unique reduced form.
+- Unlike the row echelon form (R11), pivots *are* scaled here — the reduced form
+  is canonical rather than determinant-preserving.
+- Any matrix has a reduced row echelon form, so the widget never errors on
+  content; it waits quietly (no error) while the input carries no value and shows
+  only the result's shape — the values themselves are shown by whatever widget
+  the output is connected to (see R4).
+
+---
+
 ## Architecture
 
 | Layer | Where | Notes |
@@ -365,11 +381,10 @@ State ownership follows React Flow's contract:
 
 ## Future
 
-- More widgets: transpose, inverse, determinant, rank, solve, scalar multiply,
-  sum.
-- Field-generic linear algebra (`rref`, `det`, `rank`, `solve`) written against
-  `Scalar<T>` and `Matrix<T>`, taking the field constants as parameters (see
-  `src/math/exact/scalar.ts`), so algorithms run over any exact field.
+- More widgets: transpose, inverse, determinant, rank, solve, sum.
+- Field-generic linear algebra beyond RREF (`det`, `rank`, `solve`) written
+  against `Scalar<T>` and `Matrix<T>`, taking the field constants as parameters
+  (see `src/math/exact/scalar.ts`), so algorithms run over any exact field.
 - Characteristic polynomial and spectral/Jordan decomposition, with an explicit
   "not representable in the supported exact tower" state rather than a float.
 - Pan/zoom-aware port markers, keyboard graph navigation.

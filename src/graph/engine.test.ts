@@ -430,6 +430,55 @@ describe('row echelon widget', () => {
   })
 })
 
+describe('rref widget', () => {
+  /** A matrix widget wired into a reduced-row-echelon widget. */
+  function rrefScene(cells: string[][]) {
+    let graph = createGraph()
+    graph = addNode(graph, 'matrix', 0, 0)
+    graph = addNode(graph, 'rref', 200, 0)
+    const [matrix, rref] = graph.nodes
+    graph = setMatrixCells(graph, matrix.id, cells)
+    graph = connect(graph, { node: matrix.id, port: 'm' }, { node: rref.id, port: 'm' })
+    return { graph, rref }
+  }
+
+  it('emits the reduced row echelon form of the incoming matrix', () => {
+    const { graph, rref } = rrefScene([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    const result = evaluateGraph(graph).get(rref.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.rref?.toString()).toBe('[1, 0, -1] [0, 1, 2]')
+  })
+
+  it('normalizes pivots to 1 and zeroes the column above them', () => {
+    const { graph, rref } = rrefScene([
+      ['2', '4'],
+      ['1', '3'],
+    ])
+    expect(evaluateGraph(graph).get(rref.id)?.outputs.rref?.toString()).toBe('[1, 0] [0, 1]')
+  })
+
+  it('keeps radical entries exact through elimination', () => {
+    const { graph, rref } = rrefScene([
+      ['sqrt(2)', '2'],
+      ['1', '3'],
+    ])
+    expect(evaluateGraph(graph).get(rref.id)?.outputs.rref?.toString()).toBe(
+      '[1, 0] [0, 1]',
+    )
+  })
+
+  it('waits quietly while the input carries no value', () => {
+    const graph = addNode(createGraph(), 'rref', 0, 0)
+    const rref = graph.nodes[0]
+    const result = evaluateGraph(graph).get(rref.id)
+    expect(result?.error).toBeNull()
+    expect(result?.outputs.rref).toBeNull()
+  })
+})
+
 describe('comment widget', () => {
   it('starts empty in both languages', () => {
     const graph = addNode(createGraph(), 'comment', 10, 20)

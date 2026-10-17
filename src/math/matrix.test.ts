@@ -149,6 +149,71 @@ describe('Matrix.rowEchelon', () => {
   })
 })
 
+describe('Matrix.reducedRowEchelon', () => {
+  it('produces the reduced form, with normalized pivots and zeros above them', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    expect(Matrix.rref(m, Algebraic.ONE).toString()).toBe('[1, 0] [0, 1]')
+  })
+
+  it('scales pivots to 1', () => {
+    const m = grid([
+      ['2', '4'],
+      ['1', '3'],
+    ])
+    expect(Matrix.rref(m, Algebraic.ONE).toString()).toBe('[1, 0] [0, 1]')
+  })
+
+  it('eliminates above the pivot, not only below', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+    expect(Matrix.rref(m, Algebraic.ONE).toString()).toBe('[1, 0, -1] [0, 1, 2]')
+  })
+
+  it('steps over a zero column and leaves a rank-deficient matrix in rref', () => {
+    const m = grid([
+      ['1', '2', '3'],
+      ['2', '4', '6'],
+    ])
+    expect(Matrix.rref(m, Algebraic.ONE).toString()).toBe('[1, 2, 3] [0, 0, 0]')
+  })
+
+  it('keeps fractions, radicals and complex numbers exact', () => {
+    expect(
+      Matrix.rref(
+        grid([
+          ['1/2', '1/3'],
+          ['1', '1'],
+        ]),
+        Algebraic.ONE,
+      ).toString(),
+    ).toBe('[1, 0] [0, 1]')
+    expect(Matrix.rref(grid([['sqrt(2)', '2']]), Algebraic.ONE).toString()).toBe('[1, sqrt(2)]')
+    expect(
+      Matrix.rref(
+        grid([
+          ['i', '1'],
+          ['1', 'i'],
+        ]),
+        Algebraic.ONE,
+      ).toString(),
+    ).toBe('[1, 0] [0, 1]')
+  })
+
+  it('leaves the input matrix untouched', () => {
+    const m = grid([
+      ['1', '2'],
+      ['3', '4'],
+    ])
+    Matrix.rref(m, Algebraic.ONE)
+    expect(m.toString()).toBe('[1, 2] [3, 4]')
+  })
+})
+
 describe('Matrix.toLatex', () => {
   it('renders a parenthesised matrix with fractions', () => {
     const matrix = Matrix.fromRows([

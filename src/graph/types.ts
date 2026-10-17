@@ -10,6 +10,7 @@ export type WidgetKind =
   | 'vectorCanvas'
   | 'rotation'
   | 'rowEchelon'
+  | 'rref'
   | 'comment'
 export type PortDirection = 'input' | 'output'
 
@@ -95,6 +96,14 @@ export interface RowEchelonWidget {
   y: number
 }
 
+/** A transform that emits the reduced row echelon form of the matrix on its input. */
+export interface RrefWidget {
+  id: NodeId
+  kind: 'rref'
+  x: number
+  y: number
+}
+
 /**
  * A passive bilingual note: one text per interface language (see
  * `Locale` in `src/i18n/messages.ts` — the two locales the app ships) plus the
@@ -130,6 +139,7 @@ export type GraphNode =
   | VectorCanvasWidget
   | RotationWidget
   | RowEchelonWidget
+  | RrefWidget
   | CommentWidget
 
 export interface Connection {

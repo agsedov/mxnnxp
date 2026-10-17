@@ -25,8 +25,9 @@ function sampleGraph(): Graph {
   graph = addNode(graph, 'scalarMultiply', 360, 700)
   graph = addNode(graph, 'vectorCanvas', 780, 300)
   graph = addNode(graph, 'rowEchelon', 430, 480)
+  graph = addNode(graph, 'rref', 430, 640)
   graph = addNode(graph, 'comment', 780, 560)
-  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref, comment] = graph.nodes
+  const [rotation, a, b, driven, multiply, scalar, scalarMultiply, canvas, ref, rref, comment] = graph.nodes
 
   // '√2' is unicode *and* parses, so this proves UTF-8 survives the round trip.
   graph = updateMatrixData(graph, a.id, { rows: 2, cols: 2, cells: [['√2', '0'], ['0', '√2']] })
@@ -44,6 +45,7 @@ function sampleGraph(): Graph {
   graph = connect(graph, { node: a.id, port: 'm' }, { node: scalarMultiply.id, port: 'matrix' })
   graph = connect(graph, { node: scalar.id, port: 's' }, { node: scalarMultiply.id, port: 'scalar' })
   graph = connect(graph, { node: b.id, port: 'm' }, { node: ref.id, port: 'm' })
+  graph = connect(graph, { node: b.id, port: 'm' }, { node: rref.id, port: 'm' })
   return graph
 }
 

@@ -26,6 +26,10 @@ the graph.
   exact Gaussian elimination over the exact number tower, with row swaps where
   the pivot position holds a zero and the pivots kept unscaled. Connect the
   output to a matrix widget to display the result.
+- **Reduced row echelon form widget** — takes a matrix and emits its reduced row
+  echelon form (RREF): exact Gauss–Jordan elimination, normalizing each pivot to
+  1 and clearing its column above and below, so the result is the unique reduced
+  form. Connect the output to a matrix widget to display the result.
 - **Comment widget** — a passive rectangle that carries a bilingual note (no
   slots, never wired, never errors). Only the note in the active language is
   shown and edited; switching the language flips to the other side, and the

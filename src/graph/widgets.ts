@@ -1,4 +1,4 @@
-import { parseExact, COS_SIN_TABLE, type Algebraic } from '../math/exact'
+import { Algebraic, parseExact, COS_SIN_TABLE } from '../math/exact'
 import { Matrix, MatrixDimensionError } from '../math/matrix'
 import type { CommentNodeData, GraphNode, MatrixNodeData, NodeEvaluation, RotationNodeData, VectorCanvasMode, VectorCanvasNodeData } from './types'
 import { fitsVectorMode, vectorComponents, vectorCount } from './vectorCanvas'
@@ -60,6 +60,11 @@ export const WIDGET_SPECS: Record<GraphNode['kind'], WidgetSpec> = {
     kind: 'rowEchelon',
     inputs: [{ id: 'm' }],
     outputs: [{ id: 'ref' }],
+  },
+  rref: {
+    kind: 'rref',
+    inputs: [{ id: 'm' }],
+    outputs: [{ id: 'rref' }],
   },
   // A passive note: no slots, nothing to compute or wire.
   comment: {
@@ -174,6 +179,13 @@ export function evaluateNode(
       // Any matrix has a row echelon form, so this widget never errors —
       // it simply waits until a value arrives on its input.
       return { outputs: { ref: matrix ? Matrix.rowEchelon(matrix) : null }, error: null }
+    }
+    case 'rref': {
+      const matrix = inputs.m ?? null
+      if (!matrix) {
+        return { outputs: { rref: null }, error: null }
+      }
+      return { outputs: { rref: Matrix.rref(matrix, Algebraic.ONE) }, error: null }
     }
     case 'comment':
       // A passive rectangle: no slots, no values, no errors. Its whole state

@@ -8,6 +8,7 @@ const ADDABLE_WIDGETS: readonly WidgetKind[] = [
   'matrix',
   'matrixMultiply',
   'rowEchelon',
+  'rref',
   'scalar',
   'scalarMultiply',
   'vectorCanvas',

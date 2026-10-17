@@ -112,5 +112,8 @@ describe('labels', () => {
     expect(WIDGET_TITLE_KEY.rowEchelon).toBe('widget.rowEchelon.title')
     expect(portLabelKey('rowEchelon', 'm')).toBe('widget.rowEchelon.port.m')
     expect(portLabelKey('rowEchelon', 'ref')).toBe('widget.rowEchelon.port.ref')
+    expect(WIDGET_TITLE_KEY.rref).toBe('widget.rref.title')
+    expect(portLabelKey('rref', 'm')).toBe('widget.rref.port.m')
+    expect(portLabelKey('rref', 'rref')).toBe('widget.rref.port.rref')
   })
 })
