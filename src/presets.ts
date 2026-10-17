@@ -87,3 +87,17 @@ export async function loadPreset(file: string): Promise<Graph | null> {
     return null
   }
 }
+
+/**
+ * Reads a preset file name from a URL search string (`location.search`).
+ * Accepts `preset=` or `p=`; returns the file name only if it passes the same
+ * safety check as preset loading (no `..`, no path separators). Returns `null`
+ * when not present or invalid.
+ */
+export function presetFileFromSearch(search: string): string | null {
+  if (!search) return null
+  const params = new URLSearchParams(search)
+  const file = params.get('preset') ?? params.get('p')
+  if (typeof file !== 'string' || file.length === 0) return null
+  return PRESET_FILE_NAME.test(file) ? file : null
+}

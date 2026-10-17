@@ -46,6 +46,7 @@ import {
 import { WIDGET_SPECS } from './graph/widgets'
 import type { CommentNodeData, Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
 import { /*graphFragment,*/ graphFromHash, hasGraphHash, shareUrl } from './share'
+import { loadPreset, presetFileFromSearch } from './presets'
 import {serializeGraph} from './graph/serialize'
 
 const NODE_TYPES = {
@@ -78,8 +79,10 @@ export default function App() {
   // A shared graph is decoded asynchronously (its payload is deflated), so while
   // that is in flight we hold the canvas back — otherwise the demo scene would
   // flash for a moment before the linked graph replaces it. Plain visits (no
-  // `#g=`) start resolved and are unaffected.
-  const [opening, setOpening] = useState(() => hasGraphHash(window.location.hash))
+  // `#g=` and no preset param) start resolved and are unaffected.
+  const [opening, setOpening] = useState(
+    () => hasGraphHash(window.location.hash) || presetFileFromSearch(window.location.search) !== null,
+  )
 
   const evaluation = useMemo(() => evaluateGraph(graph), [graph])
 
@@ -233,26 +236,43 @@ export default function App() {
 
   // Read the graph a link carries: once on boot, then again on every later
   // fragment change — opening a shared link in an already-open tab is only a
-  // fragment change, so the page does not reload. A fragment without a valid
-  // graph leaves the canvas as it is.
+  // fragment change, so the page does not reload. Priority: `#g=` hash wins;
+  // if absent, try preset from query (`?preset=` or `?p=`). Invalid/missing
+  // payloads leave the canvas as it is.
   useEffect(() => {
     let live = true
-    const open = () => {
-      if (!hasGraphHash(window.location.hash)) {
-        setOpening(false)
-        return
-      }
-      void graphFromHash(window.location.hash).then(shared => {
+    const open = async () => {
+      // 1) Hash (`#g=`) takes highest priority and overrides everything else.
+      if (hasGraphHash(window.location.hash)) {
+        const shared = await graphFromHash(window.location.hash)
         if (!live) return
         if (shared) setGraph(shared)
         setOpening(false)
-      })
+        return
+      }
+      // 2) Preset from GET params: lower priority than `g=`. Open if present.
+      const presetFile = presetFileFromSearch(window.location.search)
+      if (presetFile) {
+        const presetGraph = await loadPreset(presetFile)
+        if (!live) return
+        if (presetGraph) {
+          setGraph(presetGraph)
+          // Fit view after preset loads so it doesn't appear off-canvas.
+          requestAnimationFrame(() => flowInstance.current?.fitView({ duration: 250, padding: 0.3 }))
+        }
+        setOpening(false)
+        return
+      }
+      setOpening(false)
     }
-    open()
+    void open()
     window.addEventListener('hashchange', open)
+    // Also react to search changes in case someone navigates with ?preset=…
+    window.addEventListener('popstate', open)
     return () => {
       live = false
       window.removeEventListener('hashchange', open)
+      window.removeEventListener('popstate', open)
     }
   }, [])
 
