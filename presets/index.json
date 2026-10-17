@@ -1,3 +1,4 @@
 [
-  { "file": "matrix.txt", "en": "Rotation matrix", "ru": "Матрица поворота" }
+  { "file": "matrix.txt", "en": "Rotation matrix", "ru": "Матрица поворота" },
+  { "file": "elem_scalar.txt", "en": "elementary matrix for row/column manipulation", "ru": "Матрица преобразования строки/столбца" }
 ]
