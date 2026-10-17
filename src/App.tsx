@@ -45,7 +45,8 @@ import {
 } from './graph/engine'
 import { WIDGET_SPECS } from './graph/widgets'
 import type { CommentNodeData, Graph, MatrixNodeData, NodeId, RotationNodeData, VectorCanvasNodeData, WidgetKind } from './graph/types'
-import { graphFragment, graphFromHash, hasGraphHash, shareUrl } from './share'
+import { /*graphFragment,*/ graphFromHash, hasGraphHash, shareUrl } from './share'
+import {serializeGraph} from './graph/serialize'
 
 const NODE_TYPES = {
   matrix: MatrixNode,
@@ -222,7 +223,7 @@ export default function App() {
       const target = event.target as HTMLElement | null
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
       event.preventDefault()
-      void graphFragment(graph)
+      void serializeGraph(graph)
         .then(fragment => navigator.clipboard.writeText(fragment))
         .catch(() => {})
     }
